@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slope Rush</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="supabase-config.js"></script>
+  </head>
+  <body>
+    <div class="game-shell">
+      <div class="hud">
+        <div class="panel">
+          <span class="label">Score</span>
+          <span id="score">0</span>
+        </div>
+        <div class="panel">
+          <span class="label">Best</span>
+          <span id="best">0</span>
+        </div>
+      </div>
+      <div id="challengeTracker" class="challenge-tracker" aria-live="polite" hidden></div>
+      <div class="controls-hint">← → Switch lanes &nbsp;·&nbsp; ↑ Jump &nbsp;·&nbsp; ↓ Crouch</div>
+      <div id="accountBar" class="account-bar" hidden>
+        <span id="accountName"></span>
+        <button id="signOutButton" type="button">Sign out</button>
+      </div>
+
+      <canvas id="gameCanvas" width="900" height="600" aria-label="Slope style racing game"></canvas>
+
+      <div id="overlay" class="overlay visible" aria-live="polite"></div>
+
+      <div class="touch-controls" aria-label="Touch controls">
+        <button id="leftButton" type="button" aria-label="Move left">←</button>
+        <button id="jumpButton" class="action-button" type="button" aria-label="Jump">JUMP</button>
+        <button id="crouchButton" class="action-button" type="button" aria-label="Crouch">CROUCH</button>
+        <button id="rightButton" type="button" aria-label="Move right">→</button>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
