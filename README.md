@@ -20,9 +20,16 @@ The workflow publishes only `index.html`, `game.js`, `style.css`, and
 `supabase-config.js`. Never put a Supabase service-role key or other secret in
 these public game files.
 
-Rebuild and redistribute `SlopeRush.exe` once to switch existing launcher users
-to the auto-updating launcher; after that, game updates are published through
-GitHub Pages.
+The launcher checks the latest GitHub release at startup and replaces its own
+executable when a newer `SlopeRush.exe` is available. It verifies the download
+against GitHub's SHA-256 asset digest before installing it. Game-file updates
+continue to come from GitHub Pages, so normal game changes do not need a new
+launcher release.
+
+Users with a launcher built before this self-update feature must install
+`v1.0.2` once. After that, launcher releases and game-file updates are installed
+automatically on the next start, provided the launcher is in a folder the user
+can write to and an internet connection is available.
 
 The leaderboard includes Daily (midnight UTC reset) and All time tabs. After
 updating an existing Supabase project, run `SUPABASE-DAILY-LEADERBOARD.sql` once

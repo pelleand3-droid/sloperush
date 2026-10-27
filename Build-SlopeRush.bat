@@ -9,6 +9,7 @@ if not exist "%CSC%" (
 )
 
 "%CSC%" /nologo /target:winexe /out:"%~dp0SlopeRush.exe" ^
+  /reference:System.Web.Extensions.dll ^
   "%~dp0SlopeRushLauncher.cs"
 if errorlevel 1 exit /b %errorlevel%
 
