@@ -2,6 +2,12 @@
 
 The game update files are published at https://pelleand3-droid.github.io/sloperush/.
 
+## Background music
+
+Slope Rush plays an original synthesized music loop. Use the Music button in the
+top bar to turn it on or off. Playback starts after the first player interaction
+to comply with browser autoplay restrictions; no separate audio file is needed.
+
 ## Publishing updates
 
 The GitHub Pages workflow deploys the game files whenever changes are pushed to

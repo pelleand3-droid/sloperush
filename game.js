@@ -10,6 +10,7 @@ const leftButton = document.getElementById('leftButton');
 const rightButton = document.getElementById('rightButton');
 const jumpButton = document.getElementById('jumpButton');
 const crouchButton = document.getElementById('crouchButton');
+const musicToggleButton = document.getElementById('musicToggle');
 
 const LANES = [-1, 0, 1];
 const ACTION_DURATION = 0.9;
@@ -17,6 +18,18 @@ const SESSION_KEY = 'slope-rush-cloud-session';
 const CHALLENGE_STORAGE_KEY = 'slope-rush-challenges-';
 const CHALLENGE_LEVEL_XP = 300;
 let leaderboardRequestId = 0;
+const MUSIC_CHORDS = [
+  [220, 261.63, 329.63, 392],
+  [174.61, 220, 261.63, 349.23],
+  [130.81, 164.81, 196, 261.63],
+  [196, 246.94, 293.66, 392],
+];
+let musicEnabled = true;
+let musicContext = null;
+let musicGain = null;
+let musicTimer = null;
+let musicStep = 0;
+let nextMusicNoteTime = 0;
 const CHALLENGE_GROUPS = [
   [
     { id: 'score-250', title: 'Score 250 this run', metric: 'runScore', target: 250, unit: 'pts' },
@@ -687,6 +700,7 @@ function startGame() {
     showAuth();
     return;
   }
+  if (musicEnabled) startMusic();
   state.started = true;
   state.score = 0;
   state.speed = 0.38;
@@ -1100,6 +1114,94 @@ jumpButton.addEventListener('click', jump);
 crouchButton.addEventListener('click', crouch);
 signOutButton.addEventListener('click', signOut);
 document.addEventListener('keydown', handleKeyDown);
+musicToggleButton.addEventListener('click', () => {
+  musicEnabled = !musicEnabled;
+  updateMusicToggle();
+  if (musicEnabled) startMusic();
+  else stopMusic();
+});
+
+function updateMusicToggle() {
+  musicToggleButton.textContent = `♫ Music: ${musicEnabled ? 'On' : 'Off'}`;
+  musicToggleButton.setAttribute('aria-pressed', String(musicEnabled));
+  musicToggleButton.setAttribute('aria-label', `Turn music ${musicEnabled ? 'off' : 'on'}`);
+}
+
+function playMusicNote(frequency, startTime, duration, volume, type) {
+  const oscillator = musicContext.createOscillator();
+  const noteGain = musicContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.value = frequency;
+  noteGain.gain.setValueAtTime(0.0001, startTime);
+  noteGain.gain.exponentialRampToValueAtTime(volume, startTime + 0.025);
+  noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  oscillator.connect(noteGain);
+  noteGain.connect(musicGain);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration);
+}
+
+function scheduleMusic() {
+  const secondsPerStep = 60 / 108 / 2;
+  while (nextMusicNoteTime < musicContext.currentTime + 0.12) {
+    const chordIndex = Math.floor(musicStep / 8) % MUSIC_CHORDS.length;
+    const chord = MUSIC_CHORDS[chordIndex];
+    const noteIndex = musicStep % 4;
+    playMusicNote(chord[noteIndex] * 2, nextMusicNoteTime, 0.2, 0.08, 'triangle');
+    if (musicStep % 4 === 0) {
+      playMusicNote(chord[0] / 2, nextMusicNoteTime, 0.38, 0.14, 'sine');
+    }
+    if (musicStep % 8 === 0) {
+      for (const frequency of chord) {
+        playMusicNote(frequency, nextMusicNoteTime, 1.8, 0.012, 'sine');
+      }
+    }
+    nextMusicNoteTime += secondsPerStep;
+    musicStep = (musicStep + 1) % (MUSIC_CHORDS.length * 8);
+  }
+}
+
+async function startMusic() {
+  if (!musicEnabled) return;
+  try {
+    if (!musicContext) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error('Web Audio is not supported in this browser.');
+      musicContext = new AudioContextClass();
+      musicGain = musicContext.createGain();
+      musicGain.gain.value = 0;
+      musicGain.connect(musicContext.destination);
+    }
+    await musicContext.resume();
+    if (!musicEnabled) return;
+    musicGain.gain.cancelScheduledValues(musicContext.currentTime);
+    musicGain.gain.setTargetAtTime(0.45, musicContext.currentTime, 0.2);
+    if (musicTimer === null) {
+      musicStep = 0;
+      nextMusicNoteTime = musicContext.currentTime;
+      scheduleMusic();
+      musicTimer = window.setInterval(scheduleMusic, 25);
+    }
+    musicToggleButton.title = 'Background music is on';
+  } catch (error) {
+    musicEnabled = false;
+    updateMusicToggle();
+    musicToggleButton.title = 'Background music could not be started';
+    console.error('Background music could not be started:', error);
+  }
+}
+
+function stopMusic() {
+  if (musicTimer !== null) {
+    window.clearInterval(musicTimer);
+    musicTimer = null;
+  }
+  if (musicContext && musicGain) {
+    musicGain.gain.cancelScheduledValues(musicContext.currentTime);
+    musicGain.gain.setTargetAtTime(0, musicContext.currentTime, 0.04);
+  }
+  musicToggleButton.title = 'Background music is off';
+}
 
 async function initialize() {
   if (!isConfigured()) {

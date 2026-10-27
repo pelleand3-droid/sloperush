@@ -58,6 +58,34 @@ body {
   pointer-events: none;
 }
 
+.music-toggle {
+  position: absolute;
+  top: 18px;
+  right: 140px;
+  z-index: 4;
+  padding: 10px 14px;
+  border: 1px solid rgba(94, 231, 255, 0.35);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(94, 231, 255, 0.12);
+}
+
+.music-toggle:hover,
+.music-toggle:focus-visible {
+  border-color: var(--accent);
+  background: rgba(94, 231, 255, 0.12);
+}
+
+.music-toggle:focus-visible {
+  outline: 2px solid rgba(94, 231, 255, 0.65);
+  outline-offset: 2px;
+}
+
 .controls-hint {
   position: absolute;
   top: 28px;
@@ -659,6 +687,13 @@ body {
 
   .panel {
     min-width: 82px;
+  }
+
+  .music-toggle {
+    top: 14px;
+    right: 102px;
+    padding: 8px 10px;
+    font-size: 0.72rem;
   }
 
   .controls-hint {
