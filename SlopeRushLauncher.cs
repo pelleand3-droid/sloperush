@@ -8,8 +8,8 @@ using System.Text;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
-[assembly: System.Reflection.AssemblyVersion("1.0.2.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.0.2.0")]
+[assembly: System.Reflection.AssemblyVersion("1.0.3.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.0.3.0")]
 
 internal static class SlopeRushLauncher
 {
@@ -82,7 +82,8 @@ internal static class SlopeRushLauncher
                     MessageBoxIcon.Warning);
             }
 
-            string gameUrl = new Uri(Path.Combine(currentDirectory, "index.html")).AbsoluteUri;
+            string gameUrl = new Uri(Path.Combine(currentDirectory, "index.html")).AbsoluteUri
+                + "#launcher=1.0.3";
             string edgePath = FindEdge();
 
             if (edgePath != null)

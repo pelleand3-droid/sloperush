@@ -11,6 +11,8 @@ const rightButton = document.getElementById('rightButton');
 const jumpButton = document.getElementById('jumpButton');
 const crouchButton = document.getElementById('crouchButton');
 const musicToggleButton = document.getElementById('musicToggle');
+const launcherUpdateRequired = window.location.hash !== '#launcher=1.0.3';
+const LATEST_LAUNCHER_URL = 'https://github.com/pelleand3-droid/sloperush/releases/download/v1.0.3/SlopeRush.exe';
 
 const LANES = [-1, 0, 1];
 const ACTION_DURATION = 0.9;
@@ -464,6 +466,21 @@ function showRunComplete(score, status = '') {
   `;
   overlayEl.scrollTop = 0;
   overlayEl.querySelector('.overlay-content').scrollTop = 0;
+  overlayEl.classList.add('visible');
+}
+
+function showLauncherUpdateRequired() {
+  overlayEl.innerHTML = `
+    <section class="auth-card launcher-update-card">
+      <p class="eyebrow">Launcher update required</p>
+      <h1>Update to keep playing</h1>
+      <p class="auth-description">This game was opened with an old launcher or in a browser. Install Slope Rush v1.0.3 to keep playing. The updated launcher will install future game and launcher updates automatically.</p>
+      <a class="start-button launcher-update-link" href="${LATEST_LAUNCHER_URL}">Download launcher v1.0.3</a>
+      <p class="hint">After it finishes downloading, open SlopeRush.exe to start the game.</p>
+    </section>
+  `;
+  document.querySelector('.touch-controls').hidden = true;
+  musicToggleButton.hidden = true;
   overlayEl.classList.add('visible');
 }
 
@@ -1204,6 +1221,10 @@ function stopMusic() {
 }
 
 async function initialize() {
+  if (launcherUpdateRequired) {
+    showLauncherUpdateRequired();
+    return;
+  }
   if (!isConfigured()) {
     showAuth();
     return;
