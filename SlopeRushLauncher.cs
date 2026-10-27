@@ -34,21 +34,25 @@ internal static class SlopeRushLauncher
 
         try
         {
-            try
+            bool skipLauncherUpdate = args.Length == 1 && args[0] == "--skip-launcher-update";
+            if (!skipLauncherUpdate)
             {
-                if (UpdateLauncher())
+                try
                 {
-                    return;
+                    if (UpdateLauncher())
+                    {
+                        return;
+                    }
                 }
-            }
-            catch (Exception updateError)
-            {
-                MessageBox.Show(
-                    "Slope Rush could not check for launcher updates. It will continue with the installed launcher.\r\n\r\n"
-                        + updateError.Message,
-                    "Slope Rush launcher update",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                catch (Exception updateError)
+                {
+                    MessageBox.Show(
+                        "Slope Rush could not check for launcher updates. It will continue with the installed launcher.\r\n\r\n"
+                            + updateError.Message,
+                        "Slope Rush launcher update",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                }
             }
 
             string gameDirectory = Path.Combine(
@@ -258,6 +262,7 @@ internal static class SlopeRushLauncher
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = Path.GetFullPath(args[1]),
+                    Arguments = "--skip-launcher-update",
                     UseShellExecute = false
                 });
             }
