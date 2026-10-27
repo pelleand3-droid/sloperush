@@ -26,12 +26,12 @@ against GitHub's SHA-256 asset digest before installing it. Game-file updates
 continue to come from GitHub Pages, so normal game changes do not need a new
 launcher release.
 
-Game startup requires the `v1.0.3` launcher. Older launchers and direct browser
+Game startup requires the `v1.0.4` launcher. Older launchers and direct browser
 visits show a mandatory update message with a download link instead of starting
-the game. Users with `v1.0.2` can update through its self-updater; users with
-older launchers must download `v1.0.3` once. After that, launcher and game-file
-updates are installed automatically on the next start, provided the launcher
-is in a folder the user can write to and an internet connection is available.
+the game. Users with an older launcher must download `v1.0.4` once. After that,
+launcher and game-file updates are installed automatically on the next start,
+provided the launcher is in a folder the user can write to and an internet
+connection is available.
 
 The leaderboard includes Daily (midnight UTC reset) and All time tabs. After
 updating an existing Supabase project, run `SUPABASE-DAILY-LEADERBOARD.sql` once
