@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -135,8 +136,14 @@ internal static class SlopeRushLauncher
                 throw new InvalidOperationException("GitHub did not return the latest release assets.");
             }
 
+            IEnumerable assets = assetsValue as IEnumerable;
+            if (assets == null)
+            {
+                throw new InvalidOperationException("GitHub returned an invalid release assets list.");
+            }
+
             object selectedAsset = null;
-            foreach (object assetValue in (object[])assetsValue)
+            foreach (object assetValue in assets)
             {
                 Dictionary<string, object> asset = assetValue as Dictionary<string, object>;
                 object name;
