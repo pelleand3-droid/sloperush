@@ -16,6 +16,7 @@ const ACTION_DURATION = 0.9;
 const SESSION_KEY = 'slope-rush-cloud-session';
 const CHALLENGE_STORAGE_KEY = 'slope-rush-challenges-';
 const CHALLENGE_LEVEL_XP = 300;
+let leaderboardRequestId = 0;
 const CHALLENGE_GROUPS = [
   [
     { id: 'score-250', title: 'Score 250 this run', metric: 'runScore', target: 250, unit: 'pts' },
@@ -380,6 +381,10 @@ async function showLeaderboard() {
     <div class="leaderboard-card">
       <p class="eyebrow">Online top scores</p>
       <h1>Leaderboard</h1>
+      <div class="leaderboard-tabs" role="group" aria-label="Leaderboard period">
+        <button class="leaderboard-tab" type="button" data-leaderboard-period="daily" aria-pressed="false">Daily</button>
+        <button class="leaderboard-tab active" type="button" data-leaderboard-period="all-time" aria-pressed="true">All time</button>
+      </div>
       <p class="leaderboard-status">Loading scores…</p>
       <div class="leaderboard-table-wrap">
         <table class="leaderboard-table">
@@ -391,12 +396,21 @@ async function showLeaderboard() {
     </div>
   `;
   overlayEl.classList.add('visible');
+  await loadLeaderboard('all-time', ++leaderboardRequestId);
+}
+
+async function loadLeaderboard(period, requestId) {
+  const body = overlayEl.querySelector('.leaderboard-table tbody');
+  const status = overlayEl.querySelector('.leaderboard-status');
+  if (!body || !status) return;
+  status.textContent = 'Loading scores…';
+  body.innerHTML = '';
+
   try {
     const rows = await apiRequest(
-      '/rest/v1/leaderboard?select=display_name,country,score&order=score.desc&limit=10',
+      `/rest/v1/${period === 'daily' ? 'daily_leaderboard' : 'leaderboard'}?select=display_name,country,score&order=score.desc&limit=10`,
     );
-    const body = overlayEl.querySelector('tbody');
-    const status = overlayEl.querySelector('.leaderboard-status');
+    if (requestId !== leaderboardRequestId || !overlayEl.querySelector('.leaderboard-card')) return;
     if (rows.length) {
       body.innerHTML = rows.map((row, index) => `
         <tr>
@@ -406,12 +420,18 @@ async function showLeaderboard() {
           <td>${Math.floor(Number(row.score))}</td>
         </tr>
       `).join('');
-      status.textContent = 'Best score per player. Names and countries are public.';
+      status.textContent = period === 'daily'
+        ? 'Best score per player today (UTC). Names and countries are public.'
+        : 'Best score per player. Names and countries are public.';
     } else {
-      status.textContent = 'No scores yet. Finish a run to be the first on the board!';
+      status.textContent = period === 'daily'
+        ? 'No scores submitted today yet. Finish a run to be the first on the daily board!'
+        : 'No scores yet. Finish a run to be the first on the board!';
     }
   } catch (error) {
-    overlayEl.querySelector('.leaderboard-status').textContent = authErrorMessage(error);
+    if (requestId === leaderboardRequestId && overlayEl.querySelector('.leaderboard-card')) {
+      status.textContent = authErrorMessage(error);
+    }
   }
 }
 
@@ -1030,6 +1050,17 @@ function gameLoop(timestamp) {
 }
 
 overlayEl.addEventListener('click', (event) => {
+  const leaderboardTab = event.target.closest('[data-leaderboard-period]');
+  if (leaderboardTab) {
+    const period = leaderboardTab.dataset.leaderboardPeriod;
+    for (const tab of overlayEl.querySelectorAll('[data-leaderboard-period]')) {
+      const selected = tab === leaderboardTab;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-pressed', String(selected));
+    }
+    loadLeaderboard(period, ++leaderboardRequestId);
+    return;
+  }
   if (event.target.closest('.start-button:not(.auth-submit)')) {
     startGame();
     return;
