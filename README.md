@@ -11,8 +11,8 @@ Existing player XP is reset once to level 1 by the balance update. XP is stored
 on each player's device, so the reset takes effect there the next time the
 updated game is opened; accounts, scores, and challenge progress are unchanged.
 
-After scoring more than 1,000 points, occasional road-wide energy barriers appear.
-Jump over or crouch under them to keep running.
+Original lane-based blocks and obstacles appear more often as your score grows.
+Switch lanes, jump over spikes and barriers, or crouch under gates to keep running.
 
 ## Background music
 

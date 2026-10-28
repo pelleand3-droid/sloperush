@@ -765,7 +765,7 @@ function startGame() {
   state.speed = 0.38;
   state.lane = 0;
   state.elapsed = 0;
-  state.spawnTimer = 0.8;
+  state.spawnTimer = 0.65;
   state.jumpTimer = 0;
   state.crouchTimer = 0;
   state.runTime = 0;
@@ -837,15 +837,6 @@ function handleKeyDown(event) {
 }
 
 function spawnRow() {
-  if (state.score > 1000 && Math.random() < 0.14) {
-    obstacles.push({
-      lane: 0,
-      z: 1,
-      type: 'roadblock',
-    });
-    return;
-  }
-
   const available = [...LANES];
   const blockedCount = Math.random() < 0.58 ? 2 : 1;
   const blocked = [];
@@ -882,29 +873,25 @@ function update(delta) {
 
   if (state.spawnTimer <= 0) {
     spawnRow();
-    state.spawnTimer = Math.max(0.58, 1.08 - state.score * 0.0006) + Math.random() * 0.1;
+    state.spawnTimer = Math.max(0.5, 0.9 - state.score * 0.0006) + Math.random() * 0.1;
   }
 
   for (let i = obstacles.length - 1; i >= 0; i -= 1) {
     const obstacle = obstacles[i];
     obstacle.z -= seconds * state.speed;
-    const blocksCurrentLane = obstacle.type === 'roadblock' || obstacle.lane === state.lane;
+    const blocksCurrentLane = obstacle.lane === state.lane;
     if (!obstacle.checked && obstacle.z <= 0.09 && obstacle.z > -0.04 && blocksCurrentLane) {
       obstacle.checked = true;
-      const cleared = obstacle.type === 'roadblock'
-        ? state.jumpTimer > 0 || state.crouchTimer > 0
-        : obstacle.type === 'spikes' || obstacle.type === 'barrier'
-          ? state.jumpTimer > 0
-          : obstacle.type === 'gate'
-            ? state.crouchTimer > 0
-            : false;
+      const cleared = obstacle.type === 'spikes' || obstacle.type === 'barrier'
+        ? state.jumpTimer > 0
+        : obstacle.type === 'gate'
+          ? state.crouchTimer > 0
+          : false;
       if (!cleared) {
         endGame();
         return;
       }
-      recordObstacleClear(obstacle.type === 'gate' || (obstacle.type === 'roadblock' && state.crouchTimer > 0)
-        ? 'crouch'
-        : 'jump');
+      recordObstacleClear(obstacle.type === 'gate' ? 'crouch' : 'jump');
       awardExtraXp(OBSTACLE_CLEAR_XP);
     }
     if (obstacle.z <= 0) obstacles.splice(i, 1);
@@ -993,7 +980,7 @@ function drawRoad() {
 function drawObstacle(obstacle) {
   if (obstacle.z <= 0) return;
   const depth = Math.min(1, obstacle.z);
-  const x = obstacle.type === 'roadblock' ? canvas.width / 2 : lanePosition(obstacle.lane, depth);
+  const x = lanePosition(obstacle.lane, depth);
   const y = roadY(depth);
   const size = 18 + (1 - depth) * 76;
   const width = size * 0.88;
@@ -1002,20 +989,7 @@ function drawObstacle(obstacle) {
   ctx.save();
   ctx.shadowBlur = 20;
   ctx.shadowColor = obstacle.type === 'spikes' ? '#ff385b' : '#ff8a3d';
-  if (obstacle.type === 'roadblock') {
-    const roadblockWidth = roadWidth(depth) * 0.94;
-    const beamHeight = Math.max(8, size * 0.2);
-    const beamY = y - height * 0.55;
-    ctx.fillStyle = 'rgba(255, 107, 74, 0.22)';
-    ctx.fillRect(x - roadblockWidth / 2, beamY - beamHeight, roadblockWidth, beamHeight * 3);
-    ctx.fillStyle = '#ff6b4a';
-    ctx.fillRect(x - roadblockWidth / 2, beamY, roadblockWidth, beamHeight);
-    ctx.fillStyle = '#ffd166';
-    ctx.fillRect(x - roadblockWidth / 2, beamY, roadblockWidth, Math.max(2, beamHeight * 0.2));
-    ctx.fillStyle = '#ffbd4a';
-    ctx.fillRect(x - roadblockWidth / 2, y - height * 0.18, Math.max(3, size * 0.08), height * 0.18);
-    ctx.fillRect(x + roadblockWidth / 2 - Math.max(3, size * 0.08), y - height * 0.18, Math.max(3, size * 0.08), height * 0.18);
-  } else if (obstacle.type === 'spikes') {
+  if (obstacle.type === 'spikes') {
     ctx.fillStyle = '#ff385b';
     ctx.beginPath();
     ctx.moveTo(x - width / 2, y);
