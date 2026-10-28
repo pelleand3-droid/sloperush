@@ -11,8 +11,9 @@ Existing player XP is reset once to level 1 by the balance update. XP is stored
 on each player's device, so the reset takes effect there the next time the
 updated game is opened; accounts, scores, and challenge progress are unchanged.
 
-Original lane-based blocks and obstacles appear more often as your score grows.
-Switch lanes, jump over spikes and barriers, or crouch under gates to keep running.
+Original lane-based obstacles appear more often as your score grows. Most rows
+include a spike or barrier to jump over, or a gate to crouch under. Switch lanes
+to avoid blocks.
 
 ## Background music
 

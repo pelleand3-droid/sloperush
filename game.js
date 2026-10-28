@@ -844,12 +844,14 @@ function spawnRow() {
     const index = Math.floor(Math.random() * available.length);
     blocked.push(available.splice(index, 1)[0]);
   }
-  const types = ['block', 'spikes', 'gate', 'barrier'];
   for (const lane of blocked) {
+    const type = Math.random() < 0.25
+      ? 'block'
+      : ['spikes', 'gate', 'barrier'][Math.floor(Math.random() * 3)];
     obstacles.push({
       lane,
       z: 1,
-      type: types[Math.floor(Math.random() * types.length)],
+      type,
     });
   }
 }
