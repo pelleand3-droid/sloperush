@@ -3,6 +3,7 @@ const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
 const overlayEl = document.getElementById('overlay');
+const extraXpPopupEl = document.getElementById('extraXpPopup');
 const accountBar = document.getElementById('accountBar');
 const accountNameEl = document.getElementById('accountName');
 const signOutButton = document.getElementById('signOutButton');
@@ -95,7 +96,6 @@ const state = {
   challengeData: null,
   levelUpMessage: '',
   challengeMessage: '',
-  extraXpMessage: '',
   extraXpMessageId: 0,
   nextScoreXpMilestone: SCORE_XP_MILESTONE,
 };
@@ -646,7 +646,6 @@ function renderChallengeTracker() {
     <div class="challenge-tracker-heading"><strong>Challenges ${completedCount}/3</strong><span>Level ${level}</span></div>
     ${items}
     ${state.challengeMessage ? `<strong class="challenge-level-up">${escapeHtml(state.challengeMessage)}</strong>` : ''}
-    ${state.extraXpMessage ? `<strong class="challenge-level-up">${escapeHtml(state.extraXpMessage)}</strong>` : ''}
     ${state.levelUpMessage ? `<strong class="challenge-level-up">${escapeHtml(state.levelUpMessage)}</strong>` : ''}
   `;
   challengeTrackerEl.hidden = false;
@@ -668,12 +667,16 @@ function updateLevelUpMessage(previousLevel) {
 function awardExtraXp(amount) {
   const previousLevel = playerLevel();
   state.challengeData.xp += amount;
-  state.extraXpMessage = `Extra XP +${amount.toLocaleString()} XP!`;
+  extraXpPopupEl.textContent = `Extra XP +${amount.toLocaleString()} XP!`;
+  extraXpPopupEl.hidden = false;
+  extraXpPopupEl.classList.remove('visible');
+  void extraXpPopupEl.offsetWidth;
+  extraXpPopupEl.classList.add('visible');
   const messageId = ++state.extraXpMessageId;
   window.setTimeout(() => {
     if (state.extraXpMessageId !== messageId) return;
-    state.extraXpMessage = '';
-    renderChallengeTracker();
+    extraXpPopupEl.classList.remove('visible');
+    extraXpPopupEl.hidden = true;
   }, 2500);
   updateLevelUpMessage(previousLevel);
   saveChallengeData();
@@ -758,8 +761,9 @@ function startGame() {
   state.crouchTimer = 0;
   state.runTime = 0;
   state.nextScoreXpMilestone = SCORE_XP_MILESTONE;
-  state.extraXpMessage = '';
   state.extraXpMessageId += 1;
+  extraXpPopupEl.classList.remove('visible');
+  extraXpPopupEl.hidden = true;
   obstacles.length = 0;
   scoreEl.textContent = '0';
   renderChallengeTracker();
