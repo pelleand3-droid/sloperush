@@ -13,7 +13,8 @@ updated game is opened; accounts, scores, and challenge progress are unchanged.
 
 Original lane-based obstacles appear more often as your score grows. Most rows
 include a spike or barrier to jump over, or a gate to crouch under. Switch lanes
-to avoid blocks.
+to avoid blocks. After 1,000 points, road-wide energy barriers appear in about
+one in four obstacle waves; jump over or crouch under them.
 
 ## Background music
 
