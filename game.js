@@ -19,6 +19,9 @@ const ACTION_DURATION = 0.9;
 const SESSION_KEY = 'slope-rush-cloud-session';
 const CHALLENGE_STORAGE_KEY = 'slope-rush-challenges-';
 const CHALLENGE_LEVEL_XP = 300;
+const OBSTACLE_CLEAR_XP = 100;
+const SCORE_XP_MILESTONE = 1000;
+const SCORE_MILESTONE_XP = 1000;
 let leaderboardRequestId = 0;
 const MUSIC_CHORDS = [
   [220, 261.63, 329.63, 392],
@@ -92,6 +95,9 @@ const state = {
   challengeData: null,
   levelUpMessage: '',
   challengeMessage: '',
+  extraXpMessage: '',
+  extraXpMessageId: 0,
+  nextScoreXpMilestone: SCORE_XP_MILESTONE,
 };
 const obstacles = [];
 const challengeTrackerEl = document.getElementById('challengeTracker');
@@ -397,6 +403,7 @@ async function showLeaderboard() {
       <p class="eyebrow">Online top scores</p>
       <h1>Leaderboard</h1>
       <div class="leaderboard-tabs" role="group" aria-label="Leaderboard period">
+        <button class="leaderboard-tab" type="button" data-leaderboard-period="hourly" aria-pressed="false">Last hour</button>
         <button class="leaderboard-tab" type="button" data-leaderboard-period="daily" aria-pressed="false">Daily</button>
         <button class="leaderboard-tab active" type="button" data-leaderboard-period="all-time" aria-pressed="true">All time</button>
       </div>
@@ -423,7 +430,7 @@ async function loadLeaderboard(period, requestId) {
 
   try {
     const rows = await apiRequest(
-      `/rest/v1/${period === 'daily' ? 'daily_leaderboard' : 'leaderboard'}?select=display_name,country,score&order=score.desc&limit=10`,
+      `/rest/v1/${period === 'hourly' ? 'hourly_leaderboard' : period === 'daily' ? 'daily_leaderboard' : 'leaderboard'}?select=display_name,country,score&order=score.desc&limit=10`,
     );
     if (requestId !== leaderboardRequestId || !overlayEl.querySelector('.leaderboard-card')) return;
     if (rows.length) {
@@ -435,13 +442,17 @@ async function loadLeaderboard(period, requestId) {
           <td>${Math.floor(Number(row.score))}</td>
         </tr>
       `).join('');
-      status.textContent = period === 'daily'
-        ? 'Best score per player today (UTC). Names and countries are public.'
-        : 'Best score per player. Names and countries are public.';
+      status.textContent = period === 'hourly'
+        ? 'Best score per player in the last hour. Names and countries are public.'
+        : period === 'daily'
+          ? 'Best score per player today (UTC). Names and countries are public.'
+          : 'Best score per player. Names and countries are public.';
     } else {
-      status.textContent = period === 'daily'
-        ? 'No scores submitted today yet. Finish a run to be the first on the daily board!'
-        : 'No scores yet. Finish a run to be the first on the board!';
+      status.textContent = period === 'hourly'
+        ? 'No scores submitted in the last hour yet. Finish a run to be the first on this board!'
+        : period === 'daily'
+          ? 'No scores submitted today yet. Finish a run to be the first on the daily board!'
+          : 'No scores yet. Finish a run to be the first on the board!';
     }
   } catch (error) {
     if (requestId === leaderboardRequestId && overlayEl.querySelector('.leaderboard-card')) {
@@ -635,9 +646,38 @@ function renderChallengeTracker() {
     <div class="challenge-tracker-heading"><strong>Challenges ${completedCount}/3</strong><span>Level ${level}</span></div>
     ${items}
     ${state.challengeMessage ? `<strong class="challenge-level-up">${escapeHtml(state.challengeMessage)}</strong>` : ''}
+    ${state.extraXpMessage ? `<strong class="challenge-level-up">${escapeHtml(state.extraXpMessage)}</strong>` : ''}
     ${state.levelUpMessage ? `<strong class="challenge-level-up">${escapeHtml(state.levelUpMessage)}</strong>` : ''}
   `;
   challengeTrackerEl.hidden = false;
+}
+
+function updateLevelUpMessage(previousLevel) {
+  const nextLevel = playerLevel();
+  if (nextLevel <= previousLevel) return;
+  const reward = skinForLevel(nextLevel);
+  state.levelUpMessage = `Level ${nextLevel} unlocked: ${reward.name}!`;
+  const message = state.levelUpMessage;
+  window.setTimeout(() => {
+    if (state.levelUpMessage !== message) return;
+    state.levelUpMessage = '';
+    renderChallengeTracker();
+  }, 5000);
+}
+
+function awardExtraXp(amount) {
+  const previousLevel = playerLevel();
+  state.challengeData.xp += amount;
+  state.extraXpMessage = `Extra XP +${amount.toLocaleString()} XP!`;
+  const messageId = ++state.extraXpMessageId;
+  window.setTimeout(() => {
+    if (state.extraXpMessageId !== messageId) return;
+    state.extraXpMessage = '';
+    renderChallengeTracker();
+  }, 2500);
+  updateLevelUpMessage(previousLevel);
+  saveChallengeData();
+  renderChallengeTracker();
 }
 
 function updateChallengeMetric(metric, value, additive = false) {
@@ -673,17 +713,7 @@ function updateChallengeMetric(metric, value, additive = false) {
     if (dateChanged) renderChallengeTracker();
     return;
   }
-  const nextLevel = playerLevel();
-  if (nextLevel > previousLevel) {
-    const reward = skinForLevel(nextLevel);
-    state.levelUpMessage = `Level ${nextLevel} unlocked: ${reward.name}!`;
-    const message = state.levelUpMessage;
-    window.setTimeout(() => {
-      if (state.levelUpMessage !== message) return;
-      state.levelUpMessage = '';
-      renderChallengeTracker();
-    }, 5000);
-  }
+  updateLevelUpMessage(previousLevel);
   saveChallengeData();
   renderChallengeTracker();
 }
@@ -727,6 +757,9 @@ function startGame() {
   state.jumpTimer = 0;
   state.crouchTimer = 0;
   state.runTime = 0;
+  state.nextScoreXpMilestone = SCORE_XP_MILESTONE;
+  state.extraXpMessage = '';
+  state.extraXpMessageId += 1;
   obstacles.length = 0;
   scoreEl.textContent = '0';
   renderChallengeTracker();
@@ -817,6 +850,10 @@ function update(delta) {
   state.crouchTimer = Math.max(0, state.crouchTimer - seconds);
   state.score += seconds * (12 + state.speed * 8);
   scoreEl.textContent = String(Math.floor(state.score));
+  while (state.score >= state.nextScoreXpMilestone) {
+    awardExtraXp(SCORE_MILESTONE_XP);
+    state.nextScoreXpMilestone += SCORE_XP_MILESTONE;
+  }
   updateRunChallenges();
   state.speed = Math.min(1.3, 0.38 + state.score * 0.0015);
   state.spawnTimer -= seconds;
@@ -841,6 +878,7 @@ function update(delta) {
         return;
       }
       recordObstacleClear(obstacle.type);
+      awardExtraXp(OBSTACLE_CLEAR_XP);
     }
     if (obstacle.z <= 0) obstacles.splice(i, 1);
   }

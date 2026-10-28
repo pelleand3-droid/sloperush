@@ -47,6 +47,17 @@ create or replace view public.daily_leaderboard as
   where (scores.created_at at time zone 'UTC')::date = (now() at time zone 'UTC')::date
   group by profiles.id, profiles.display_name, profiles.country;
 
+-- Hourly board shows each player's best score from the rolling last hour.
+create or replace view public.hourly_leaderboard as
+  select
+    profiles.display_name,
+    profiles.country,
+    max(scores.score)::integer as score
+  from public.scores as scores
+  join public.profiles as profiles on profiles.id = scores.user_id
+  where scores.created_at >= now() - interval '1 hour'
+  group by profiles.id, profiles.display_name, profiles.country;
+
 create or replace function public.create_slope_rush_profile()
 returns trigger
 language plpgsql
@@ -96,7 +107,8 @@ revoke all on public.profiles from anon, authenticated;
 revoke all on public.scores from anon, authenticated;
 revoke all on public.leaderboard from anon, authenticated;
 revoke all on public.daily_leaderboard from anon, authenticated;
+revoke all on public.hourly_leaderboard from anon, authenticated;
 grant select on public.profiles to authenticated;
 grant select, insert on public.scores to authenticated;
-grant select on public.leaderboard, public.daily_leaderboard to anon, authenticated;
+grant select on public.leaderboard, public.daily_leaderboard, public.hourly_leaderboard to anon, authenticated;
 grant usage, select on sequence public.scores_id_seq to authenticated;

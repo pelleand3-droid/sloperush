@@ -2,6 +2,12 @@
 
 The game update files are published at https://pelleand3-droid.github.io/sloperush/.
 
+## Extra XP
+
+Successfully jumping over or crouching under an obstacle awards 100 XP and shows
+an "Extra XP" message. Reaching each 1,000-point score milestone awards another
+1,000 XP, with the same reward at 1,000, 2,000, 3,000 points, and so on.
+
 ## Background music
 
 Slope Rush plays an original synthesized music loop. Use the Music button in the
@@ -33,6 +39,7 @@ launcher and game-file updates are installed automatically on the next start,
 provided the launcher is in a folder the user can write to and an internet
 connection is available.
 
-The leaderboard includes Daily (midnight UTC reset) and All time tabs. After
-updating an existing Supabase project, run `SUPABASE-DAILY-LEADERBOARD.sql` once
-in its SQL Editor to enable the daily board.
+The leaderboard includes Last hour (rolling 60-minute window), Daily (midnight
+UTC reset), and All time tabs. After updating an existing Supabase project, run
+`SUPABASE-DAILY-LEADERBOARD.sql` once in its SQL Editor to enable the recent
+boards.
