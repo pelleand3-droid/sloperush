@@ -552,7 +552,7 @@ function loadChallengeData() {
     progress: Object.fromEntries(Object.entries(savedProgress)
       .filter(([, value]) => Number.isFinite(value) && value >= 0)),
     completed: sameDay && Array.isArray(saved.completed) ? saved.completed : [],
-    xp: saved && Number.isFinite(saved.xp) && saved.xp >= 0 ? Math.floor(saved.xp) : 0,
+    xp: saved && saved.xpResetVersion === 1 && Number.isFinite(saved.xp) && saved.xp >= 0 ? Math.floor(saved.xp) : 0,     xpResetVersion: 1,
     equippedSkinLevel: saved && Number.isInteger(saved.equippedSkinLevel) && saved.equippedSkinLevel > 0
       ? saved.equippedSkinLevel
       : 1,
