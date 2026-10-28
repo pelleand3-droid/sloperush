@@ -667,6 +667,12 @@ function updateLevelUpMessage(previousLevel) {
 function awardExtraXp(amount) {
   const previousLevel = playerLevel();
   state.challengeData.xp += amount;
+  const canvasRect = canvas.getBoundingClientRect();
+  const shellRect = canvas.parentElement.getBoundingClientRect();
+  const playerX = canvasRect.left + (lanePosition(state.lane, 0.08) / canvas.width) * canvasRect.width;
+  const playerHeadY = canvasRect.top + ((canvas.height - 76 - 72) / canvas.height) * canvasRect.height;
+  extraXpPopupEl.style.left = `${playerX - shellRect.left}px`;
+  extraXpPopupEl.style.top = `${playerHeadY - shellRect.top}px`;
   extraXpPopupEl.textContent = `Extra XP +${amount.toLocaleString()} XP!`;
   extraXpPopupEl.hidden = false;
   extraXpPopupEl.classList.remove('visible');
