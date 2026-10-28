@@ -4,10 +4,9 @@ The game update files are published at https://pelleand3-droid.github.io/sloperu
 
 ## Extra XP
 
-Successfully jumping over or crouching under an obstacle awards 100 XP and shows
-a small "Extra XP" popup above the player that fades away. Reaching each
-1,000-point score milestone awards another 1,000 XP, with the same reward at
-1,000, 2,000, 3,000 points, and so on.
+Successfully jumping over or crouching under an obstacle awards 10 XP and shows
+a small "+10 XP" text above the player that fades away. Completing a challenge
+awards 10 XP. Reaching each 1,000-point score milestone awards another 100 XP.
 
 ## Background music
 

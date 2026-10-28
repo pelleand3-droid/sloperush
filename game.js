@@ -20,9 +20,9 @@ const ACTION_DURATION = 0.9;
 const SESSION_KEY = 'slope-rush-cloud-session';
 const CHALLENGE_STORAGE_KEY = 'slope-rush-challenges-';
 const CHALLENGE_LEVEL_XP = 300;
-const OBSTACLE_CLEAR_XP = 100;
+const OBSTACLE_CLEAR_XP = 10;
 const SCORE_XP_MILESTONE = 1000;
-const SCORE_MILESTONE_XP = 1000;
+const SCORE_MILESTONE_XP = 100;
 let leaderboardRequestId = 0;
 const MUSIC_CHORDS = [
   [220, 261.63, 329.63, 392],
@@ -673,7 +673,7 @@ function awardExtraXp(amount) {
   const playerHeadY = canvasRect.top + ((canvas.height - 76 - 72) / canvas.height) * canvasRect.height;
   extraXpPopupEl.style.left = `${playerX - shellRect.left}px`;
   extraXpPopupEl.style.top = `${playerHeadY - shellRect.top}px`;
-  extraXpPopupEl.textContent = `Extra XP +${amount.toLocaleString()} XP!`;
+  extraXpPopupEl.textContent = `+${amount.toLocaleString()} XP`;
   extraXpPopupEl.hidden = false;
   extraXpPopupEl.classList.remove('visible');
   void extraXpPopupEl.offsetWidth;
@@ -702,7 +702,7 @@ function updateChallengeMetric(metric, value, additive = false) {
     changed = true;
     if (next >= challenge.target && !state.challengeData.completed.includes(challenge.id)) {
       state.challengeData.completed.push(challenge.id);
-      state.challengeData.xp += 100;
+      state.challengeData.xp += 10;
     }
   }
   const challenges = dailyChallenges();

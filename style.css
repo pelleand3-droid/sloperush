@@ -133,18 +133,13 @@ body {
   z-index: 3;
   width: max-content;
   max-width: calc(100% - 32px);
-  padding: 5px 8px;
+  padding: 0;
   transform: translate(-50%, -100%);
-  border: 1px solid rgba(139, 255, 122, 0.5);
-  border-radius: 9px;
-  background: rgba(5, 12, 27, 0.82);
-  box-shadow: 0 0 16px rgba(139, 255, 122, 0.2);
   color: var(--accent-2);
-  font-size: 0.8rem;
-  font-weight: 800;
+  font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
   text-align: center;
-  text-shadow: 0 0 8px rgba(139, 255, 122, 0.5);
   pointer-events: none;
 }
 
