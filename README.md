@@ -7,6 +7,12 @@ The game update files are published at https://pelleand3-droid.github.io/sloperu
 Successfully jumping over or crouching under an obstacle awards 10 XP and shows
 a small "+10 XP" text above the player that fades away. Completing a challenge
 awards 10 XP. Reaching each 1,000-point score milestone awards another 100 XP.
+Existing player XP is reset once to level 1 by the balance update. XP is stored
+on each player's device, so the reset takes effect there the next time the
+updated game is opened; accounts, scores, and challenge progress are unchanged.
+
+After scoring more than 1,000 points, occasional road-wide energy barriers appear.
+Jump over or crouch under them to keep running.
 
 ## Background music
 
