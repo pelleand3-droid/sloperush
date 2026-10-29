@@ -17,6 +17,7 @@ const LATEST_LAUNCHER_URL = 'https://github.com/pelleand3-droid/sloperush/releas
 
 const LANES = [-1, 0, 1];
 const ACTION_DURATION = 0.9;
+const MAP_CHANGE_SCORE = 500;
 const SESSION_KEY = 'slope-rush-cloud-session';
 const CHALLENGE_STORAGE_KEY = 'slope-rush-challenges-';
 const CHALLENGE_XP_RESET_VERSION = 1;
@@ -156,7 +157,7 @@ const state = {
   extraXpMessageId: 0,
   nextScoreXpMilestone: SCORE_XP_MILESTONE,
   currentMapIndex: 0,
-  nextMapScore: 1000,
+  nextMapScore: MAP_CHANGE_SCORE,
 };
 const obstacles = [];
 const challengeTrackerEl = document.getElementById('challengeTracker');
@@ -829,7 +830,7 @@ function startGame() {
   state.runTime = 0;
   state.nextScoreXpMilestone = SCORE_XP_MILESTONE;
   state.currentMapIndex = 0;
-  state.nextMapScore = 1000;
+  state.nextMapScore = MAP_CHANGE_SCORE;
   state.extraXpMessageId += 1;
   extraXpPopupEl.classList.remove('visible');
   extraXpPopupEl.hidden = true;
@@ -897,7 +898,7 @@ function handleKeyDown(event) {
 }
 
 function spawnRow() {
-  if (state.score > 1000 && Math.random() < 0.25) {
+  if (state.score > 1000 && Math.random() < 0.15) {
     obstacles.push({
       lane: 0,
       z: 1,
@@ -907,7 +908,7 @@ function spawnRow() {
   }
 
   const available = [...LANES];
-  const blockedCount = Math.random() < 0.58 ? 2 : 1;
+  const blockedCount = Math.random() < 0.2 ? 2 : 1;
   const blocked = [];
   for (let i = 0; i < blockedCount; i += 1) {
     const index = Math.floor(Math.random() * available.length);
@@ -942,15 +943,15 @@ function update(delta) {
     const nextMaps = Array.from({ length: MAPS.length - 1 }, (_, index) => index + 1)
       .filter((index) => index !== state.currentMapIndex);
     state.currentMapIndex = nextMaps[Math.floor(Math.random() * nextMaps.length)];
-    state.nextMapScore += 1000;
+    state.nextMapScore += MAP_CHANGE_SCORE;
   }
   updateRunChallenges();
-  state.speed = Math.min(1.3, 0.38 + state.score * 0.0015);
+  state.speed = Math.min(0.95, 0.38 + state.score * 0.0008);
   state.spawnTimer -= seconds;
 
   if (state.spawnTimer <= 0) {
     spawnRow();
-    state.spawnTimer = Math.max(0.45, 0.8 - state.score * 0.0006) + Math.random() * 0.1;
+    state.spawnTimer = Math.max(0.7, 1.05 - state.score * 0.0003) + Math.random() * 0.12;
   }
 
   for (let i = obstacles.length - 1; i >= 0; i -= 1) {

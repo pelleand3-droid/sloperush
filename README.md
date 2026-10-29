@@ -14,7 +14,8 @@ updated game is opened; accounts, scores, and challenge progress are unchanged.
 Original lane-based obstacles appear more often as your score grows. Most rows
 include a spike or barrier to jump over, or a gate to crouch under. Switch lanes
 to avoid blocks. After 1,000 points, road-wide energy barriers appear in about
-one in four obstacle waves; jump over or crouch under them.
+15% of obstacle waves; jump over or crouch under them. Obstacle waves leave
+more time to react, and most block only one lane.
 
 ## Background music
 
@@ -24,7 +25,7 @@ to comply with browser autoplay restrictions; no separate audio file is needed.
 
 ## Maps
 
-Each run starts on the classic track. Every 1,000 score points, the scenery
+Each run starts on the classic track. Every 500 score points, the scenery
 changes to a randomly chosen new world without a preview or announcement.
 Possible worlds include neon city skylines, snowy mountains, desert canyons,
 sky bridges, and outer space. A world will not repeat immediately.
