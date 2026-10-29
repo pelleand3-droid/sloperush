@@ -76,6 +76,62 @@ const RUNNER_SKINS = [
   { name: 'Ocean Blue', suit: '#3979ff', glow: '#75b9ff', legs: '#263c78', trim: '#deebff', hair: '#192447' },
   { name: 'Candy Pop', suit: '#ff6683', glow: '#ffabc5', legs: '#67334e', trim: '#fff0f4', hair: '#3e1e2e' },
 ];
+const MAPS = [
+  {
+    id: 'classic',
+    scenery: 'classic',
+    sky: ['#172e63', '#0a1531', '#030711'],
+    road: ['#17284a', '#1b3057'],
+    edge: 'rgba(100, 220, 255, 0.75)',
+    lane: 'rgba(150, 190, 255, 0.23)',
+    glow: 'rgba(53, 110, 255, 0.3)',
+  },
+  {
+    id: 'neon-city',
+    scenery: 'city',
+    sky: ['#20144b', '#11152f', '#080b1b'],
+    road: ['#20264c', '#2a315e'],
+    edge: '#ff54d8',
+    lane: 'rgba(94, 231, 255, 0.3)',
+    glow: 'rgba(255, 65, 213, 0.28)',
+  },
+  {
+    id: 'frozen-mountain',
+    scenery: 'mountain',
+    sky: ['#a8e7ff', '#568bb4', '#16334f'],
+    road: ['#577b91', '#668da3'],
+    edge: '#bcf4ff',
+    lane: 'rgba(222, 250, 255, 0.42)',
+    glow: 'rgba(176, 236, 255, 0.4)',
+  },
+  {
+    id: 'desert-canyon',
+    scenery: 'desert',
+    sky: ['#ffbd70', '#e87555', '#542b48'],
+    road: ['#65404b', '#80505a'],
+    edge: '#ffc16e',
+    lane: 'rgba(255, 220, 166, 0.38)',
+    glow: 'rgba(255, 176, 91, 0.42)',
+  },
+  {
+    id: 'sky-bridge',
+    scenery: 'bridge',
+    sky: ['#78c9ee', '#416c9b', '#182844'],
+    road: ['#354961', '#425971'],
+    edge: '#ffd36e',
+    lane: 'rgba(226, 238, 255, 0.38)',
+    glow: 'rgba(255, 211, 110, 0.35)',
+  },
+  {
+    id: 'space',
+    scenery: 'space',
+    sky: ['#101746', '#090d28', '#030611'],
+    road: ['#171c40', '#222b58'],
+    edge: '#8b76ff',
+    lane: 'rgba(151, 155, 255, 0.32)',
+    glow: 'rgba(102, 91, 255, 0.4)',
+  },
+];
 const config = window.SLOPE_RUSH_SUPABASE || {};
 const state = {
   started: false,
@@ -99,6 +155,8 @@ const state = {
   challengeMessage: '',
   extraXpMessageId: 0,
   nextScoreXpMilestone: SCORE_XP_MILESTONE,
+  currentMapIndex: 0,
+  nextMapScore: 1000,
 };
 const obstacles = [];
 const challengeTrackerEl = document.getElementById('challengeTracker');
@@ -770,6 +828,8 @@ function startGame() {
   state.crouchTimer = 0;
   state.runTime = 0;
   state.nextScoreXpMilestone = SCORE_XP_MILESTONE;
+  state.currentMapIndex = 0;
+  state.nextMapScore = 1000;
   state.extraXpMessageId += 1;
   extraXpPopupEl.classList.remove('visible');
   extraXpPopupEl.hidden = true;
@@ -878,6 +938,12 @@ function update(delta) {
     awardExtraXp(SCORE_MILESTONE_XP);
     state.nextScoreXpMilestone += SCORE_XP_MILESTONE;
   }
+  while (state.score >= state.nextMapScore) {
+    const nextMaps = Array.from({ length: MAPS.length - 1 }, (_, index) => index + 1)
+      .filter((index) => index !== state.currentMapIndex);
+    state.currentMapIndex = nextMaps[Math.floor(Math.random() * nextMaps.length)];
+    state.nextMapScore += 1000;
+  }
   updateRunChallenges();
   state.speed = Math.min(1.3, 0.38 + state.score * 0.0015);
   state.spawnTimer -= seconds;
@@ -926,26 +992,179 @@ function roadY(depth) {
 }
 
 function drawBackground() {
+  const map = MAPS[state.currentMapIndex];
   const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  sky.addColorStop(0, '#172e63');
-  sky.addColorStop(0.5, '#0a1531');
-  sky.addColorStop(1, '#030711');
+  sky.addColorStop(0, map.sky[0]);
+  sky.addColorStop(0.5, map.sky[1]);
+  sky.addColorStop(1, map.sky[2]);
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  for (const star of stars) {
-    ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
-    ctx.fillRect(star.x * canvas.width, star.y * 250, star.size, star.size);
+  if (map.scenery === 'city') {
+    const buildings = [
+      [0, 102, 70, 154], [76, 78, 62, 178], [145, 118, 54, 138],
+      [205, 64, 77, 192], [288, 104, 60, 152], [555, 82, 72, 174],
+      [635, 112, 55, 144], [698, 68, 80, 188], [786, 98, 68, 158],
+    ];
+    buildings.forEach(([x, y, width, height], index) => {
+      ctx.fillStyle = index % 2 ? '#17183c' : '#121530';
+      ctx.fillRect(x, y, width, height);
+      ctx.fillStyle = index % 2 ? 'rgba(255, 77, 211, 0.68)' : 'rgba(82, 224, 255, 0.7)';
+      for (let wx = x + 10; wx < x + width - 5; wx += 18) {
+        for (let wy = y + 13; wy < y + height - 8; wy += 22) {
+          ctx.fillRect(wx, wy, 5, 8);
+        }
+      }
+    });
+  } else if (map.scenery === 'mountain') {
+    ctx.fillStyle = '#628aa5';
+    ctx.beginPath();
+    ctx.moveTo(0, 200);
+    ctx.lineTo(120, 68);
+    ctx.lineTo(230, 200);
+    ctx.lineTo(340, 82);
+    ctx.lineTo(470, 200);
+    ctx.lineTo(620, 58);
+    ctx.lineTo(790, 200);
+    ctx.lineTo(900, 95);
+    ctx.lineTo(900, 255);
+    ctx.lineTo(0, 255);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(237, 252, 255, 0.82)';
+    [[120, 68, 42], [340, 82, 38], [620, 58, 48], [900, 95, 29]].forEach(([x, y, width]) => {
+      ctx.beginPath();
+      ctx.moveTo(x - width, y + width);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + width, y + width);
+      ctx.closePath();
+      ctx.fill();
+    });
+    for (const [x, y, scale] of [[42, 190, 0.9], [270, 183, 0.72], [540, 193, 0.82], [850, 185, 0.9]]) {
+      ctx.fillStyle = '#244d5b';
+      ctx.beginPath();
+      ctx.moveTo(x, y - 42 * scale);
+      ctx.lineTo(x - 24 * scale, y);
+      ctx.lineTo(x + 24 * scale, y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(x - 4 * scale, y - 4 * scale, 8 * scale, 12 * scale);
+    }
+  } else if (map.scenery === 'desert') {
+    ctx.fillStyle = '#a64e4a';
+    ctx.beginPath();
+    ctx.moveTo(0, 118);
+    ctx.lineTo(93, 162);
+    ctx.lineTo(160, 126);
+    ctx.lineTo(245, 196);
+    ctx.lineTo(310, 143);
+    ctx.lineTo(370, 180);
+    ctx.lineTo(0, 260);
+    ctx.fill();
+    ctx.fillStyle = '#c9684f';
+    ctx.beginPath();
+    ctx.moveTo(900, 100);
+    ctx.lineTo(810, 150);
+    ctx.lineTo(742, 120);
+    ctx.lineTo(665, 194);
+    ctx.lineTo(600, 150);
+    ctx.lineTo(545, 188);
+    ctx.lineTo(900, 260);
+    ctx.fill();
+    ctx.fillStyle = '#ffe1a0';
+    ctx.shadowColor = '#ff9b50';
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    ctx.arc(450, 122, 34, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    for (const x of [70, 180, 730, 830]) {
+      ctx.fillStyle = '#47805d';
+      ctx.fillRect(x - 4, 192, 8, 24);
+      ctx.fillRect(x - 12, 197, 8, 14);
+      ctx.fillRect(x + 4, 188, 8, 16);
+    }
+  } else if (map.scenery === 'bridge') {
+    ctx.fillStyle = 'rgba(31, 48, 73, 0.92)';
+    ctx.fillRect(0, 176, 900, 17);
+    ctx.fillRect(0, 202, 900, 8);
+    ctx.strokeStyle = '#d6a960';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(45, 205);
+    ctx.lineTo(45, 78);
+    ctx.quadraticCurveTo(450, -5, 855, 78);
+    ctx.lineTo(855, 205);
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(45, 112);
+    ctx.lineTo(855, 112);
+    ctx.moveTo(45, 148);
+    ctx.lineTo(855, 148);
+    ctx.stroke();
+    for (const x of [120, 210, 300, 390, 510, 600, 690, 780]) {
+      ctx.beginPath();
+      ctx.moveTo(x, 90 + Math.abs(450 - x) * 0.18);
+      ctx.lineTo(x, 176);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(20, 34, 57, 0.7)';
+    ctx.beginPath();
+    ctx.moveTo(0, 230);
+    ctx.lineTo(125, 195);
+    ctx.lineTo(205, 230);
+    ctx.lineTo(300, 198);
+    ctx.lineTo(385, 230);
+    ctx.lineTo(485, 196);
+    ctx.lineTo(590, 230);
+    ctx.lineTo(700, 194);
+    ctx.lineTo(800, 230);
+    ctx.lineTo(900, 198);
+    ctx.lineTo(900, 290);
+    ctx.lineTo(0, 290);
+    ctx.fill();
+  } else if (map.scenery === 'space') {
+    for (const star of stars) {
+      ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
+      ctx.fillRect(star.x * canvas.width, star.y * 250, star.size, star.size);
+    }
+    ctx.fillStyle = '#d7c8ff';
+    ctx.shadowColor = '#9277ff';
+    ctx.shadowBlur = 32;
+    ctx.beginPath();
+    ctx.arc(120, 115, 38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(107, 86, 196, 0.75)';
+    ctx.beginPath();
+    ctx.ellipse(120, 115, 62, 13, -0.22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(160, 174, 255, 0.75)';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.ellipse(760, 142, 70, 25, -0.24, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#7785cf';
+    ctx.fillRect(720, 128, 80, 28);
+    ctx.fillStyle = '#8edfff';
+    ctx.fillRect(735, 133, 12, 8);
+    ctx.fillRect(773, 133, 12, 8);
+  } else {
+    for (const star of stars) {
+      ctx.fillStyle = `rgba(255,255,255,${star.alpha})`;
+      ctx.fillRect(star.x * canvas.width, star.y * 250, star.size, star.size);
+    }
   }
 
   const glow = ctx.createRadialGradient(canvas.width / 2, 175, 5, canvas.width / 2, 175, 250);
-  glow.addColorStop(0, 'rgba(53, 110, 255, 0.3)');
-  glow.addColorStop(1, 'rgba(53, 110, 255, 0)');
+  glow.addColorStop(0, map.glow);
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, canvas.width, 400);
 }
 
 function drawRoad() {
+  const map = MAPS[state.currentMapIndex];
   const horizon = 165;
   ctx.beginPath();
   ctx.moveTo(canvas.width / 2 - 45, horizon);
@@ -969,11 +1188,35 @@ function drawRoad() {
     ctx.lineTo(canvas.width / 2 + wFar / 2, yFar);
     ctx.lineTo(canvas.width / 2 - wFar / 2, yFar);
     ctx.closePath();
-    ctx.fillStyle = i % 2 ? '#17284a' : '#1b3057';
+    ctx.fillStyle = i % 2 ? map.road[0] : map.road[1];
     ctx.fill();
   }
 
-  ctx.strokeStyle = 'rgba(100, 220, 255, 0.75)';
+  if (map.scenery === 'bridge') {
+    ctx.strokeStyle = '#d6a960';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    for (const side of [-1, 1]) {
+      ctx.moveTo(canvas.width / 2 + side * (roadWidth(1) / 2 - 8), roadY(1));
+      ctx.lineTo(canvas.width / 2 + side * (roadWidth(0) / 2 - 8), roadY(0));
+    }
+    ctx.stroke();
+    ctx.lineWidth = 3;
+    for (let i = 1; i < 9; i += 1) {
+      const depth = i / 9;
+      const y = roadY(depth);
+      const halfWidth = roadWidth(depth) / 2 - 8;
+      ctx.beginPath();
+      for (const side of [-1, 1]) {
+        const x = canvas.width / 2 + side * halfWidth;
+        ctx.moveTo(x, y - 16 * (1 - depth));
+        ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle = map.edge;
   ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(canvas.width / 2 - 45, horizon);
@@ -983,7 +1226,7 @@ function drawRoad() {
   ctx.stroke();
 
   for (const laneLine of [-1 / 6, 1 / 6]) {
-    ctx.strokeStyle = 'rgba(150, 190, 255, 0.23)';
+    ctx.strokeStyle = map.lane;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(canvas.width / 2 + laneLine * roadWidth(1), horizon);

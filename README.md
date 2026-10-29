@@ -22,6 +22,13 @@ Slope Rush plays an original synthesized music loop. Use the Music button in the
 top bar to turn it on or off. Playback starts after the first player interaction
 to comply with browser autoplay restrictions; no separate audio file is needed.
 
+## Maps
+
+Each run starts on the classic track. Every 1,000 score points, the scenery
+changes to a randomly chosen new world without a preview or announcement.
+Possible worlds include neon city skylines, snowy mountains, desert canyons,
+sky bridges, and outer space. A world will not repeat immediately.
+
 ## Publishing updates
 
 The GitHub Pages workflow deploys the game files whenever changes are pushed to
