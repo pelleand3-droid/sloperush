@@ -765,7 +765,7 @@ function startGame() {
   state.speed = 0.38;
   state.lane = 0;
   state.elapsed = 0;
-  state.spawnTimer = 0.65;
+  state.spawnTimer = 0.6;
   state.jumpTimer = 0;
   state.crouchTimer = 0;
   state.runTime = 0;
@@ -884,7 +884,7 @@ function update(delta) {
 
   if (state.spawnTimer <= 0) {
     spawnRow();
-    state.spawnTimer = Math.max(0.5, 0.9 - state.score * 0.0006) + Math.random() * 0.1;
+    state.spawnTimer = Math.max(0.45, 0.8 - state.score * 0.0006) + Math.random() * 0.1;
   }
 
   for (let i = obstacles.length - 1; i >= 0; i -= 1) {
