@@ -821,7 +821,7 @@ function startGame() {
   if (musicEnabled) startMusic();
   state.started = true;
   state.score = 0;
-  state.speed = 0.38;
+  state.speed = 0.45;
   state.lane = 0;
   state.elapsed = 0;
   state.spawnTimer = 0.6;
@@ -898,7 +898,7 @@ function handleKeyDown(event) {
 }
 
 function spawnRow() {
-  if (state.score > 1000 && Math.random() < 0.15) {
+  if (state.score > 750 && Math.random() < 0.22) {
     obstacles.push({
       lane: 0,
       z: 1,
@@ -908,7 +908,7 @@ function spawnRow() {
   }
 
   const available = [...LANES];
-  const blockedCount = Math.random() < 0.2 ? 2 : 1;
+  const blockedCount = Math.random() < Math.min(0.55, 0.38 + state.score * 0.00003) ? 2 : 1;
   const blocked = [];
   for (let i = 0; i < blockedCount; i += 1) {
     const index = Math.floor(Math.random() * available.length);
@@ -946,12 +946,12 @@ function update(delta) {
     state.nextMapScore += MAP_CHANGE_SCORE;
   }
   updateRunChallenges();
-  state.speed = Math.min(0.95, 0.38 + state.score * 0.0008);
+  state.speed = Math.min(1.05, 0.45 + state.score * 0.00095);
   state.spawnTimer -= seconds;
 
   if (state.spawnTimer <= 0) {
     spawnRow();
-    state.spawnTimer = Math.max(0.7, 1.05 - state.score * 0.0003) + Math.random() * 0.12;
+    state.spawnTimer = Math.max(0.6, 0.95 - state.score * 0.0003) + Math.random() * 0.08;
   }
 
   for (let i = obstacles.length - 1; i >= 0; i -= 1) {
