@@ -1,36 +1,33 @@
-# Slope Rush
+# STARWELL
 
-The game update files are published at https://pelleand3-droid.github.io/sloperush/.
+STARWELL is a zero-gravity arcade survival game. Steer a small ship through a
+star system collapsing toward a central black hole, collect luminous fragments,
+and stay ahead of incoming debris. The game update files are published at
+https://pelleand3-droid.github.io/sloperush/.
+
+## Flight and scoring
+
+Use **WASD** or the **arrow keys** to thrust. Your ship has inertia: release the
+controls to drift, and steer against your momentum to slow down. Press **Space**
+or **Burst** for a quick directional acceleration; the burst recharges after
+2.4 seconds. Avoid the black hole, debris, and the edge of the flight zone.
+Survival time and collected fragments both add to your signal score.
+
+On touch screens, use the on-screen direction pad and Burst button. The game
+keeps the existing online accounts, personal bests, leaderboards, daily
+challenges, and XP rewards.
 
 ## Extra XP
 
-Successfully jumping over or crouching under an obstacle awards 10 XP and shows
-a small "+10 XP" text above the player that fades away. Completing a challenge
-awards 10 XP. Reaching each 1,000-point score milestone awards another 100 XP.
-Existing player XP is reset once to level 1 by the balance update. XP is stored
-on each player's device, so the reset takes effect there the next time the
-updated game is opened; accounts, scores, and challenge progress are unchanged.
-
-Original lane-based obstacles appear more often as your score grows. Most rows
-include a spike or barrier to jump over, or a gate to crouch under. Switch lanes
-to avoid blocks. Runners start faster, accelerate more quickly, and obstacle
-waves arrive sooner as your score rises.
-Up to 55% of lane-based waves block two lanes, while always leaving one open.
-After 750 points, road-wide energy barriers
-can appear in about 22% of waves; jump over or crouch under them.
+Collecting a fragment awards 10 XP. Completing a challenge awards 10 XP.
+Reaching each 1,000-point score milestone awards another 100 XP. XP and
+unlocked ship colors are stored on each player's device.
 
 ## Background music
 
-Slope Rush plays an original synthesized music loop. Use the Music button in the
+STARWELL plays an original synthesized music loop. Use the music icon in the
 top bar to turn it on or off. Playback starts after the first player interaction
 to comply with browser autoplay restrictions; no separate audio file is needed.
-
-## Maps
-
-Each run starts on the classic track. Every 500 score points, the scenery
-changes to a randomly chosen new world without a preview or announcement.
-Possible worlds include neon city skylines, snowy mountains, desert canyons,
-sky bridges, and outer space. A world will not repeat immediately.
 
 ## Publishing updates
 

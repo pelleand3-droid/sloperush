@@ -11,6 +11,10 @@ const leftButton = document.getElementById('leftButton');
 const rightButton = document.getElementById('rightButton');
 const jumpButton = document.getElementById('jumpButton');
 const crouchButton = document.getElementById('crouchButton');
+const boostButton = document.getElementById('boostButton');
+const shardsEl = document.getElementById('shards');
+const boostStatusEl = document.getElementById('boostStatus');
+const worldLabelEl = document.getElementById('worldLabel');
 const musicToggleButton = document.getElementById('musicToggle');
 const launcherUpdateRequired = window.location.hash !== '#launcher=1.0.4';
 const LATEST_LAUNCHER_URL = 'https://github.com/pelleand3-droid/sloperush/releases/download/v1.0.4/SlopeRush.exe';
@@ -50,19 +54,19 @@ const CHALLENGE_GROUPS = [
     { id: 'survive-50', title: 'Survive 50 sec', metric: 'runTime', target: 50, unit: 'sec' },
   ],
   [
-    { id: 'clear-10', title: 'Clear 10 obstacles', metric: 'clears', target: 10, unit: 'clears' },
-    { id: 'clear-18', title: 'Clear 18 obstacles', metric: 'clears', target: 18, unit: 'clears' },
-    { id: 'clear-25', title: 'Clear 25 obstacles', metric: 'clears', target: 25, unit: 'clears' },
+    { id: 'fragments-5', title: 'Collect 5 fragments', metric: 'clears', target: 5, unit: 'fragments' },
+    { id: 'fragments-10', title: 'Collect 10 fragments', metric: 'clears', target: 10, unit: 'fragments' },
+    { id: 'fragments-15', title: 'Collect 15 fragments', metric: 'clears', target: 15, unit: 'fragments' },
   ],
   [
-    { id: 'jump-4', title: 'Jump over 4 obstacles', metric: 'jumpClears', target: 4, unit: 'jumps' },
-    { id: 'jump-7', title: 'Jump over 7 obstacles', metric: 'jumpClears', target: 7, unit: 'jumps' },
-    { id: 'jump-10', title: 'Jump over 10 obstacles', metric: 'jumpClears', target: 10, unit: 'jumps' },
+    { id: 'burst-4', title: 'Burst 4 times', metric: 'jumpClears', target: 4, unit: 'bursts' },
+    { id: 'burst-7', title: 'Burst 7 times', metric: 'jumpClears', target: 7, unit: 'bursts' },
+    { id: 'burst-10', title: 'Burst 10 times', metric: 'jumpClears', target: 10, unit: 'bursts' },
   ],
   [
-    { id: 'crouch-3', title: 'Crouch under 3 obstacles', metric: 'crouchClears', target: 3, unit: 'obstacles' },
-    { id: 'crouch-5', title: 'Crouch under 5 obstacles', metric: 'crouchClears', target: 5, unit: 'obstacles' },
-    { id: 'crouch-8', title: 'Crouch under 8 obstacles', metric: 'crouchClears', target: 8, unit: 'obstacles' },
+    { id: 'close-call-3', title: 'Pass close to 3 hazards', metric: 'crouchClears', target: 3, unit: 'close calls' },
+    { id: 'close-call-5', title: 'Pass close to 5 hazards', metric: 'crouchClears', target: 5, unit: 'close calls' },
+    { id: 'close-call-8', title: 'Pass close to 8 hazards', metric: 'crouchClears', target: 8, unit: 'close calls' },
   ],
 ];
 const RUNNER_SKINS = [
@@ -143,7 +147,7 @@ const state = {
   country: null,
   session: null,
   authMode: 'login',
-  speed: 0.38,
+  speed: 0.4,
   lane: 0,
   lastTimestamp: 0,
   spawnTimer: 0,
@@ -460,7 +464,7 @@ async function showLeaderboard() {
   state.started = false;
   overlayEl.innerHTML = `
     <div class="leaderboard-card">
-      <p class="eyebrow">Online top scores</p>
+      <p class="eyebrow">STARWELL signal records</p>
       <h1>Leaderboard</h1>
       <div class="leaderboard-tabs" role="group" aria-label="Leaderboard period">
         <button class="leaderboard-tab" type="button" data-leaderboard-period="hourly" aria-pressed="false">Last hour</button>
@@ -545,7 +549,7 @@ function showLauncherUpdateRequired() {
     <section class="auth-card launcher-update-card">
       <p class="eyebrow">Launcher update required</p>
       <h1>Update to keep playing</h1>
-      <p class="auth-description">This game was opened with an old launcher or in a browser. Install Slope Rush v1.0.4 to keep playing. The updated launcher will install future game and launcher updates automatically.</p>
+      <p class="auth-description">STARWELL needs the Slope Rush v1.0.4 launcher to play. The updated launcher installs future game and launcher updates automatically.</p>
       <a class="start-button launcher-update-link" href="${LATEST_LAUNCHER_URL}">Download launcher v1.0.4</a>
       <p class="hint">After it finishes downloading, open SlopeRush.exe to start the game.</p>
     </section>
@@ -675,8 +679,8 @@ function challengePanelMarkup() {
           <span>Next: ${escapeHtml(nextSkin.name)} · Lv ${level + 1}</span>
         </summary>
         <div class="skin-equipped">
-          <label for="skinSelect">Choose an unlocked skin</label>
-          <select id="skinSelect" aria-label="Choose an unlocked runner skin">
+          <label for="skinSelect">Choose a ship color</label>
+          <select id="skinSelect" aria-label="Choose an unlocked ship color">
             ${Array.from({ length: level }, (_, index) => {
               const skinLevel = index + 1;
               const unlocked = skinForLevel(skinLevel);
@@ -1164,6 +1168,103 @@ function drawBackground() {
   ctx.fillRect(0, 0, canvas.width, 400);
 }
 
+function drawRoadsideScenery() {
+  const scenery = MAPS[state.currentMapIndex].scenery;
+  if (!['city', 'mountain', 'desert'].includes(scenery)) return;
+
+  const objects = [];
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 8; i += 1) {
+      const depth = 1 - ((i / 8 + state.elapsed * 0.12) % 1);
+      objects.push({ depth, side, index: i });
+    }
+  }
+  objects.sort((a, b) => b.depth - a.depth);
+
+  for (const { depth, side, index } of objects) {
+    const distanceScale = 1 - depth;
+    const scale = 0.2 + distanceScale * 0.8;
+    const roadEdge = roadWidth(depth) / 2;
+    const baseY = roadY(depth);
+    const offset = 12 + scale * 20;
+    const x = canvas.width / 2 + side * (roadEdge + offset);
+
+    if (scenery === 'city') {
+      const width = (42 + (index % 3) * 13) * scale;
+      const height = (108 + (index % 4) * 26) * scale;
+      const left = side < 0 ? x - width : x;
+      const top = baseY - height;
+      const front = ['#31394d', '#3d4353', '#454454', '#344451'][index % 4];
+      const sideFace = ['#222b3c', '#292e40', '#302e3d', '#273642'][index % 4];
+
+      ctx.fillStyle = sideFace;
+      ctx.beginPath();
+      if (side < 0) {
+        ctx.moveTo(left, top + 5 * scale);
+        ctx.lineTo(left + width * 0.16, top);
+        ctx.lineTo(left + width * 0.16, baseY);
+        ctx.lineTo(left, baseY);
+      } else {
+        ctx.moveTo(left + width, top + 5 * scale);
+        ctx.lineTo(left + width * 0.84, top);
+        ctx.lineTo(left + width * 0.84, baseY);
+        ctx.lineTo(left + width, baseY);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = front;
+      ctx.fillRect(left + width * 0.16, top, width * 0.68, height);
+      ctx.fillStyle = 'rgba(255, 215, 132, 0.72)';
+      const windowWidth = Math.max(1.5, 4 * scale);
+      const windowHeight = Math.max(2, 7 * scale);
+      for (let row = 0; row < 5; row += 1) {
+        for (let column = 0; column < 2; column += 1) {
+          ctx.fillRect(
+            left + width * (0.28 + column * 0.3),
+            top + height * (0.14 + row * 0.16),
+            windowWidth,
+            windowHeight,
+          );
+        }
+      }
+      ctx.fillStyle = 'rgba(200, 220, 239, 0.34)';
+      ctx.fillRect(left + width * 0.12, top, width * 0.76, Math.max(1, 2 * scale));
+    } else {
+      const treeHeight = (72 + (index % 3) * 16) * scale;
+      const treeWidth = treeHeight * 0.52;
+      const treeX = side < 0 ? x - treeWidth / 2 : x + treeWidth / 2;
+
+      if (scenery === 'mountain') {
+        ctx.fillStyle = index % 2 ? '#294f50' : '#355b55';
+        ctx.fillRect(treeX - 2 * scale, baseY - treeHeight * 0.18, 4 * scale, treeHeight * 0.2);
+        for (let tier = 0; tier < 3; tier += 1) {
+          const tierY = baseY - treeHeight + tier * treeHeight * 0.24;
+          const tierWidth = treeWidth * (0.42 + tier * 0.2);
+          ctx.beginPath();
+          ctx.moveTo(treeX, tierY);
+          ctx.lineTo(treeX - tierWidth, tierY + treeHeight * 0.38);
+          ctx.lineTo(treeX + tierWidth, tierY + treeHeight * 0.38);
+          ctx.closePath();
+          ctx.fill();
+        }
+      } else {
+        const rockWidth = (60 + (index % 3) * 18) * scale;
+        const rockHeight = (48 + (index % 4) * 14) * scale;
+        ctx.fillStyle = index % 2 ? '#95514c' : '#ad5c4d';
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.lineTo(x - side * rockWidth * 0.45, baseY - rockHeight * 0.72);
+        ctx.lineTo(x - side * rockWidth * 0.16, baseY - rockHeight);
+        ctx.lineTo(x + side * rockWidth * 0.3, baseY - rockHeight * 0.55);
+        ctx.lineTo(x + side * rockWidth * 0.48, baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  }
+}
+
 function drawRoad() {
   const map = MAPS[state.currentMapIndex];
   const horizon = 165;
@@ -1391,6 +1492,7 @@ function drawPlayer() {
 
 function draw() {
   drawBackground();
+  drawRoadsideScenery();
   drawRoad();
   for (const obstacle of obstacles) drawObstacle(obstacle);
   drawPlayer();
@@ -1449,10 +1551,6 @@ overlayEl.addEventListener('change', (event) => {
   if (summaryName) summaryName.innerHTML = `<span class="skin-swatch" style="--skin-color:${skin.suit};--skin-glow:${skin.glow}"></span> ${escapeHtml(skin.name)}`;
 });
 overlayEl.addEventListener('submit', handleAuthSubmit);
-leftButton.addEventListener('click', () => movePlayer(-1));
-rightButton.addEventListener('click', () => movePlayer(1));
-jumpButton.addEventListener('click', jump);
-crouchButton.addEventListener('click', crouch);
 signOutButton.addEventListener('click', signOut);
 document.addEventListener('keydown', handleKeyDown);
 musicToggleButton.addEventListener('click', () => {
@@ -1463,9 +1561,10 @@ musicToggleButton.addEventListener('click', () => {
 });
 
 function updateMusicToggle() {
-  musicToggleButton.textContent = `♫ Music: ${musicEnabled ? 'On' : 'Off'}`;
+  musicToggleButton.textContent = musicEnabled ? '♫' : '♪';
   musicToggleButton.setAttribute('aria-pressed', String(musicEnabled));
   musicToggleButton.setAttribute('aria-label', `Turn music ${musicEnabled ? 'off' : 'on'}`);
+  musicToggleButton.title = `Music ${musicEnabled ? 'on' : 'off'}`;
 }
 
 function playMusicNote(frequency, startTime, duration, volume, type) {
@@ -1575,6 +1674,532 @@ async function initialize() {
     showAuth('login', `Please sign in again. ${authErrorMessage(error)}`);
   }
 }
+
+const flightInput = { x: 0, y: 0 };
+const flightKeys = new Set();
+const hazards = [];
+const fragments = [];
+const spaceDust = Array.from({ length: 150 }, () => ({
+  x: Math.random() * canvas.width,
+  y: Math.random() * canvas.height,
+  size: Math.random() * 1.7 + 0.3,
+  depth: Math.random() * 0.65 + 0.15,
+  alpha: Math.random() * 0.55 + 0.12,
+}));
+const STARWELL_CENTER = { x: canvas.width / 2, y: canvas.height / 2 + 20 };
+const FLIGHT_BOUNDS = { left: 36, right: canvas.width - 36, top: 54, bottom: canvas.height - 44 };
+
+function showWelcome() {
+  document.activeElement.blur();
+  overlayEl.innerHTML = `
+    <div class="overlay-content welcome-screen">
+      <p class="eyebrow">A signal from the edge of space</p>
+      <h1>STAR<span>WELL</span></h1>
+      <p class="welcome-copy">Drift through a dying star system. Keep your momentum, harvest fragments, and don't let the void pull you under.</p>
+      ${challengePanelMarkup()}
+      <button class="start-button" type="button">Enter the drift</button>
+      <button class="auth-switch" type="button" data-show-leaderboard>View signal records</button>
+    </div>
+  `;
+  overlayEl.scrollTop = 0;
+  overlayEl.querySelector('.overlay-content').scrollTop = 0;
+  overlayEl.classList.add('visible');
+  accountNameEl.textContent = state.username;
+  accountBar.hidden = false;
+  renderChallengeTracker();
+}
+
+function showRunComplete(score, status = '') {
+  document.activeElement.blur();
+  overlayEl.innerHTML = `
+    <div class="overlay-content run-complete">
+      <p class="eyebrow">Signal lost · fragments recovered ${state.shards || 0}</p>
+      <h1>LOST IN THE WELL</h1>
+      <p>You transmitted <strong>${score}</strong> signal</p>
+      ${challengePanelMarkup()}
+      <p class="hint">${escapeHtml(status)}</p>
+      <button class="start-button" type="button">Drift again</button>
+      <button class="auth-switch" type="button" data-show-leaderboard>View signal records</button>
+      <p class="hint">Steer with WASD or arrows · Space to burst</p>
+    </div>
+  `;
+  overlayEl.scrollTop = 0;
+  overlayEl.querySelector('.overlay-content').scrollTop = 0;
+  overlayEl.classList.add('visible');
+}
+
+function updateRunChallenges() {
+  if (!state.challengeData) return;
+  updateChallengeMetric('runScore', Math.floor(state.score));
+  updateChallengeMetric('runTime', Math.floor(state.runTime));
+}
+
+function recordObstacleClear(action) {
+  if (!state.challengeData) return;
+  if (action === 'fragment') updateChallengeMetric('clears', 1, true);
+  if (action === 'burst') updateChallengeMetric('jumpClears', 1, true);
+  if (action === 'close-call') updateChallengeMetric('crouchClears', 1, true);
+}
+
+function startGame() {
+  if (!state.username || !state.session) {
+    showAuth();
+    return;
+  }
+  if (musicEnabled) startMusic();
+  Object.assign(state, {
+    started: true,
+    score: 0,
+    elapsed: 0,
+    runTime: 0,
+    shards: 0,
+    x: STARWELL_CENTER.x,
+    y: STARWELL_CENTER.y + 165,
+    vx: 28,
+    vy: -12,
+    boostCooldown: 0,
+    boostTimer: 0,
+    spawnTimer: 1.1,
+    fragmentTimer: 0.8,
+    nextScoreXpMilestone: SCORE_XP_MILESTONE,
+    lastTimestamp: performance.now(),
+  });
+  flightInput.x = 0;
+  flightInput.y = 0;
+  flightKeys.clear();
+  hazards.length = 0;
+  fragments.length = 0;
+  scoreEl.textContent = '0';
+  bestEl.textContent = String(state.best);
+  shardsEl.textContent = '0';
+  boostStatusEl.textContent = 'BURST READY';
+  renderChallengeTracker();
+  overlayEl.classList.remove('visible');
+}
+
+function endGame() {
+  if (!state.started) return;
+  state.started = false;
+  updateRunChallenges();
+  const finalScore = Math.floor(state.score);
+  showRunComplete(finalScore, 'Transmitting signal record…');
+  submitScore(finalScore).then(
+    () => {
+      if (!state.started) showRunComplete(finalScore, 'Signal record synced to the online board.');
+    },
+    (error) => {
+      if (!state.started) showRunComplete(finalScore, `Signal record could not sync: ${authErrorMessage(error)}`);
+    },
+  );
+}
+
+function movePlayer(direction) {
+  if (!state.started) return;
+  state.vx += direction * 105;
+}
+
+function jump() {
+  if (!state.started) return;
+  state.vy -= 85;
+}
+
+function crouch() {
+  if (!state.started) return;
+  state.vy += 85;
+}
+
+function fireBoost() {
+  if (!state.started || state.boostCooldown > 0) return;
+  let dx = flightInput.x;
+  let dy = flightInput.y;
+  if (!dx && !dy) {
+    const speed = Math.hypot(state.vx, state.vy);
+    dx = speed > 30 ? state.vx / speed : 0;
+    dy = speed > 30 ? state.vy / speed : -1;
+  } else {
+    const magnitude = Math.hypot(dx, dy) || 1;
+    dx /= magnitude;
+    dy /= magnitude;
+  }
+  state.vx += dx * 390;
+  state.vy += dy * 390;
+  state.boostCooldown = 2.4;
+  state.boostTimer = 0.2;
+  recordObstacleClear('burst');
+}
+
+function handleKeyDown(event) {
+  if (event.target.closest('input, textarea, [contenteditable="true"]')) return;
+  const key = event.code;
+  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(key)) event.preventDefault();
+  if (event.repeat && key === 'Space') return;
+  if (key === 'Space') {
+    if (state.started) fireBoost();
+    else if (state.username) startGame();
+    return;
+  }
+  const directions = {
+    ArrowLeft: [-1, 0], KeyA: [-1, 0],
+    ArrowRight: [1, 0], KeyD: [1, 0],
+    ArrowUp: [0, -1], KeyW: [0, -1],
+    ArrowDown: [0, 1], KeyS: [0, 1],
+  };
+  if (directions[key]) flightKeys.add(key);
+  refreshFlightInput();
+}
+
+function handleKeyUp(event) {
+  flightKeys.delete(event.code);
+  refreshFlightInput();
+}
+
+function refreshFlightInput() {
+  refreshTouchInput();
+}
+
+function spawnHazard() {
+  const edge = Math.floor(Math.random() * 4);
+  const position = edge === 0 ? { x: Math.random() * canvas.width, y: 22 }
+    : edge === 1 ? { x: canvas.width - 22, y: Math.random() * canvas.height }
+      : edge === 2 ? { x: Math.random() * canvas.width, y: canvas.height - 22 }
+        : { x: 22, y: Math.random() * canvas.height };
+  const angle = Math.atan2(STARWELL_CENTER.y - position.y, STARWELL_CENTER.x - position.x)
+    + (Math.random() - 0.5) * 0.8;
+  const speed = 42 + Math.random() * 42 + Math.min(state.runTime, 50) * 0.9;
+  hazards.push({
+    x: position.x,
+    y: position.y,
+    vx: Math.cos(angle) * speed,
+    vy: Math.sin(angle) * speed,
+    radius: 11 + Math.random() * 13,
+    rotation: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * 1.6,
+    closeCall: false,
+  });
+}
+
+function spawnFragment() {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 105 + Math.random() * 180;
+  fragments.push({
+    x: STARWELL_CENTER.x + Math.cos(angle) * radius,
+    y: STARWELL_CENTER.y + Math.sin(angle) * radius * 0.72,
+    phase: Math.random() * Math.PI * 2,
+    radius: 7,
+  });
+}
+
+function update(delta) {
+  if (!state.started) return;
+  const seconds = delta / 1000;
+  state.elapsed += seconds;
+  state.runTime += seconds;
+  state.boostCooldown = Math.max(0, state.boostCooldown - seconds);
+  state.boostTimer = Math.max(0, state.boostTimer - seconds);
+
+  const inputMagnitude = Math.hypot(flightInput.x, flightInput.y) || 1;
+  state.vx += (flightInput.x / inputMagnitude) * 430 * seconds;
+  state.vy += (flightInput.y / inputMagnitude) * 430 * seconds;
+
+  const dx = STARWELL_CENTER.x - state.x;
+  const dy = STARWELL_CENTER.y - state.y;
+  const distanceSquared = Math.max(2500, dx * dx + dy * dy);
+  const gravity = 145000 / distanceSquared;
+  state.vx += (dx / Math.sqrt(distanceSquared)) * gravity * seconds;
+  state.vy += (dy / Math.sqrt(distanceSquared)) * gravity * seconds;
+  const drag = Math.pow(0.985, seconds * 60);
+  state.vx *= drag;
+  state.vy *= drag;
+  const maxSpeed = 390;
+  const speed = Math.hypot(state.vx, state.vy);
+  if (speed > maxSpeed) {
+    state.vx = (state.vx / speed) * maxSpeed;
+    state.vy = (state.vy / speed) * maxSpeed;
+  }
+  state.x += state.vx * seconds;
+  state.y += state.vy * seconds;
+  state.score += seconds * 10;
+
+  if (Math.hypot(state.x - STARWELL_CENTER.x, state.y - STARWELL_CENTER.y) < 31) {
+    endGame();
+    return;
+  }
+  if (state.x < FLIGHT_BOUNDS.left || state.x > FLIGHT_BOUNDS.right
+    || state.y < FLIGHT_BOUNDS.top || state.y > FLIGHT_BOUNDS.bottom) {
+    endGame();
+    return;
+  }
+
+  while (state.score >= state.nextScoreXpMilestone) {
+    awardExtraXp(SCORE_MILESTONE_XP);
+    state.nextScoreXpMilestone += SCORE_XP_MILESTONE;
+  }
+  scoreEl.textContent = String(Math.floor(state.score));
+  boostStatusEl.textContent = state.boostCooldown > 0
+    ? `BURST ${state.boostCooldown.toFixed(1)}`
+    : 'BURST READY';
+  updateRunChallenges();
+
+  state.spawnTimer -= seconds;
+  state.fragmentTimer -= seconds;
+  if (state.spawnTimer <= 0) {
+    spawnHazard();
+    state.spawnTimer = Math.max(0.62, 1.7 - state.runTime * 0.012) + Math.random() * 0.35;
+  }
+  if (state.fragmentTimer <= 0) {
+    spawnFragment();
+    state.fragmentTimer = 1.3 + Math.random() * 0.8;
+  }
+
+  for (let i = hazards.length - 1; i >= 0; i -= 1) {
+    const hazard = hazards[i];
+    hazard.x += hazard.vx * seconds;
+    hazard.y += hazard.vy * seconds;
+    hazard.rotation += hazard.spin * seconds;
+    const hazardDistance = Math.hypot(state.x - hazard.x, state.y - hazard.y);
+    if (hazardDistance < hazard.radius + 12) {
+      endGame();
+      return;
+    }
+    if (!hazard.closeCall && hazardDistance < hazard.radius + 37) {
+      hazard.closeCall = true;
+      recordObstacleClear('close-call');
+    }
+    if (hazard.x < -40 || hazard.x > canvas.width + 40 || hazard.y < -40 || hazard.y > canvas.height + 40) {
+      hazards.splice(i, 1);
+    }
+  }
+
+  for (let i = fragments.length - 1; i >= 0; i -= 1) {
+    const fragment = fragments[i];
+    fragment.phase += seconds * 2;
+    fragment.x += Math.sin(fragment.phase * 0.7) * seconds * 8;
+    fragment.y += Math.cos(fragment.phase) * seconds * 7;
+    if (Math.hypot(state.x - fragment.x, state.y - fragment.y) < 23) {
+      fragments.splice(i, 1);
+      state.shards += 1;
+      state.score += 75;
+      scoreEl.textContent = String(Math.floor(state.score));
+      shardsEl.textContent = String(state.shards);
+      recordObstacleClear('fragment');
+      awardExtraXp(OBSTACLE_CLEAR_XP);
+    }
+  }
+}
+
+function drawBackground() {
+  const background = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  background.addColorStop(0, '#11191d');
+  background.addColorStop(0.48, '#090e15');
+  background.addColorStop(1, '#140d17');
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const nebula = ctx.createRadialGradient(620, 150, 8, 620, 150, 420);
+  nebula.addColorStop(0, 'rgba(80, 120, 108, 0.16)');
+  nebula.addColorStop(0.5, 'rgba(96, 52, 86, 0.08)');
+  nebula.addColorStop(1, 'rgba(8, 12, 18, 0)');
+  ctx.fillStyle = nebula;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (const star of spaceDust) {
+    const drift = state.started ? state.vx * star.depth * 0.025 : 0;
+    star.x -= drift;
+    if (star.x < 0) star.x += canvas.width;
+    if (star.x > canvas.width) star.x -= canvas.width;
+    ctx.globalAlpha = star.alpha * (0.8 + Math.sin(state.elapsed * 1.5 + star.x) * 0.2);
+    ctx.fillStyle = star.size > 1.5 ? '#d9f8e9' : '#92a0ad';
+    ctx.fillRect(star.x, star.y, star.size, star.size);
+  }
+  ctx.globalAlpha = 1;
+
+  const centerGlow = ctx.createRadialGradient(STARWELL_CENTER.x, STARWELL_CENTER.y, 30, STARWELL_CENTER.x, STARWELL_CENTER.y, 310);
+  centerGlow.addColorStop(0, 'rgba(5, 6, 9, 0)');
+  centerGlow.addColorStop(0.65, 'rgba(149, 98, 109, 0.05)');
+  centerGlow.addColorStop(1, 'rgba(5, 6, 9, 0)');
+  ctx.fillStyle = centerGlow;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'rgba(174, 218, 198, 0.08)';
+  ctx.setLineDash([2, 10]);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.ellipse(STARWELL_CENTER.x, STARWELL_CENTER.y, 125, 68, -0.2, 0, Math.PI * 2);
+  ctx.ellipse(STARWELL_CENTER.x, STARWELL_CENTER.y, 210, 115, -0.2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle = 'rgba(196, 224, 218, 0.15)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(FLIGHT_BOUNDS.left, FLIGHT_BOUNDS.top, FLIGHT_BOUNDS.right - FLIGHT_BOUNDS.left, FLIGHT_BOUNDS.bottom - FLIGHT_BOUNDS.top);
+}
+
+function drawStarwell() {
+  const pulse = Math.sin(state.elapsed * 2) * 2;
+  ctx.save();
+  ctx.translate(STARWELL_CENTER.x, STARWELL_CENTER.y);
+  ctx.rotate(state.elapsed * 0.12);
+  ctx.strokeStyle = 'rgba(228, 149, 160, 0.34)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 54 + pulse, 20 + pulse * 0.3, -0.16, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(167, 245, 208, 0.19)';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 72, 25, 0.28, 0, Math.PI * 2);
+  ctx.stroke();
+  const coreGlow = ctx.createRadialGradient(0, 0, 4, 0, 0, 57);
+  coreGlow.addColorStop(0, 'rgba(0, 0, 0, 1)');
+  coreGlow.addColorStop(0.5, 'rgba(7, 8, 12, 0.98)');
+  coreGlow.addColorStop(0.67, 'rgba(194, 117, 132, 0.55)');
+  coreGlow.addColorStop(1, 'rgba(194, 117, 132, 0)');
+  ctx.fillStyle = coreGlow;
+  ctx.beginPath();
+  ctx.arc(0, 0, 57, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#020305';
+  ctx.beginPath();
+  ctx.arc(0, 0, 22 + pulse * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHazard(hazard) {
+  ctx.save();
+  ctx.translate(hazard.x, hazard.y);
+  ctx.rotate(hazard.rotation);
+  ctx.shadowColor = 'rgba(229, 147, 153, 0.33)';
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = '#4b4247';
+  ctx.strokeStyle = '#bd8b8d';
+  ctx.lineWidth = 1.3;
+  ctx.beginPath();
+  for (let i = 0; i < 9; i += 1) {
+    const angle = (i / 9) * Math.PI * 2;
+    const uneven = hazard.radius * (0.76 + ((i * 17) % 5) * 0.06);
+    const x = Math.cos(angle) * uneven;
+    const y = Math.sin(angle) * uneven;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = 'rgba(222, 194, 184, 0.35)';
+  ctx.beginPath();
+  ctx.moveTo(-hazard.radius * 0.35, -hazard.radius * 0.15);
+  ctx.lineTo(hazard.radius * 0.1, hazard.radius * 0.08);
+  ctx.lineTo(hazard.radius * 0.32, hazard.radius * 0.42);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawFragment(fragment) {
+  const flicker = 0.7 + Math.sin(fragment.phase * 3) * 0.2;
+  ctx.save();
+  ctx.translate(fragment.x, fragment.y);
+  ctx.rotate(fragment.phase * 0.5);
+  ctx.globalAlpha = flicker;
+  ctx.shadowColor = '#a7f5d0';
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = '#c9ffe3';
+  ctx.beginPath();
+  ctx.moveTo(0, -fragment.radius);
+  ctx.lineTo(fragment.radius * 0.72, 0);
+  ctx.lineTo(0, fragment.radius);
+  ctx.lineTo(-fragment.radius * 0.72, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const skin = equippedSkin();
+  const angle = Math.atan2(state.vy, state.vx);
+  const boostGlow = state.boostTimer > 0;
+  ctx.save();
+  ctx.translate(state.x, state.y);
+  ctx.rotate(angle);
+  ctx.strokeStyle = boostGlow ? '#d9ffe9' : skin.glow;
+  ctx.lineWidth = boostGlow ? 3 : 1.5;
+  ctx.shadowColor = boostGlow ? '#d9ffe9' : skin.glow;
+  ctx.shadowBlur = boostGlow ? 24 : 12;
+  ctx.fillStyle = skin.suit;
+  ctx.beginPath();
+  ctx.moveTo(17, 0);
+  ctx.lineTo(-10, -9);
+  ctx.lineTo(-5, 0);
+  ctx.lineTo(-10, 9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  if (boostGlow) {
+    ctx.fillStyle = '#f9fff9';
+    ctx.beginPath();
+    ctx.moveTo(-8, -4);
+    ctx.lineTo(-25 - Math.random() * 12, 0);
+    ctx.lineTo(-8, 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function draw() {
+  drawBackground();
+  drawStarwell();
+  for (const fragment of fragments) drawFragment(fragment);
+  for (const hazard of hazards) drawHazard(hazard);
+  drawPlayer();
+}
+
+function gameLoop(timestamp) {
+  const delta = state.lastTimestamp ? Math.min(timestamp - state.lastTimestamp, 50) : 16;
+  state.lastTimestamp = timestamp;
+  update(delta);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function bindFlightButton(button, x, y) {
+  if (!button) return;
+  const press = (event) => {
+    event.preventDefault();
+    flightKeys.add(`touch-${x}-${y}`);
+    refreshTouchInput();
+    button.classList.add('pressed');
+    if (button.setPointerCapture && event.pointerId !== undefined) button.setPointerCapture(event.pointerId);
+  };
+  const release = (event) => {
+    if (event) event.preventDefault();
+    flightKeys.delete(`touch-${x}-${y}`);
+    refreshTouchInput();
+    button.classList.remove('pressed');
+  };
+  button.addEventListener('pointerdown', press);
+  button.addEventListener('pointerup', release);
+  button.addEventListener('pointercancel', release);
+  button.addEventListener('lostpointercapture', release);
+}
+
+function refreshTouchInput() {
+  const left = flightKeys.has('touch--1-0');
+  const right = flightKeys.has('touch-1-0');
+  const up = flightKeys.has('touch-0--1');
+  const down = flightKeys.has('touch-0-1');
+  flightInput.x = Number(right || flightKeys.has('ArrowRight') || flightKeys.has('KeyD'))
+    - Number(left || flightKeys.has('ArrowLeft') || flightKeys.has('KeyA'));
+  flightInput.y = Number(down || flightKeys.has('ArrowDown') || flightKeys.has('KeyS'))
+    - Number(up || flightKeys.has('ArrowUp') || flightKeys.has('KeyW'));
+}
+
+document.addEventListener('keyup', handleKeyUp);
+bindFlightButton(leftButton, -1, 0);
+bindFlightButton(rightButton, 1, 0);
+bindFlightButton(jumpButton, 0, -1);
+bindFlightButton(crouchButton, 0, 1);
+boostButton.addEventListener('click', fireBoost);
 
 bestEl.textContent = '0';
 requestAnimationFrame(gameLoop);

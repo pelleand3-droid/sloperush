@@ -3,45 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Slope Rush</title>
+    <meta name="theme-color" content="#070a12" />
+    <title>STARWELL — drift into the unknown</title>
     <link rel="stylesheet" href="style.css" />
     <script src="supabase-config.js"></script>
   </head>
   <body>
-    <div class="game-shell">
-      <div class="hud">
-        <div class="panel">
-          <span class="label">Score</span>
-          <span id="score">0</span>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="STARWELL home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>STAR<span>WELL</span></span>
+        </a>
+        <div class="hud" aria-live="polite">
+          <div class="stat"><span class="label">Signal</span><strong id="score">0</strong></div>
+          <div class="stat"><span class="label">Best run</span><strong id="best">0</strong></div>
+          <div class="stat shard-stat"><span class="label">Fragments</span><strong id="shards">0</strong></div>
         </div>
-        <div class="panel">
-          <span class="label">Best</span>
-          <span id="best">0</span>
+        <button id="musicToggle" class="music-toggle" type="button" aria-pressed="true" aria-label="Turn music off">♫</button>
+        <div id="accountBar" class="account-bar" hidden>
+          <span id="accountName"></span>
+          <button id="signOutButton" type="button">Sign out</button>
         </div>
-      </div>
-      <button id="musicToggle" class="music-toggle" type="button" aria-pressed="true" aria-label="Turn music off">
-        ♫ Music: On
-      </button>
-      <div id="challengeTracker" class="challenge-tracker" aria-live="polite" hidden></div>
-      <div class="controls-hint">← → Switch lanes &nbsp;·&nbsp; ↑ Jump &nbsp;·&nbsp; ↓ Crouch</div>
-      <div id="accountBar" class="account-bar" hidden>
-        <span id="accountName"></span>
-        <button id="signOutButton" type="button">Sign out</button>
-      </div>
+      </header>
 
-      <canvas id="gameCanvas" width="900" height="600" aria-label="Slope style racing game"></canvas>
-
-      <div id="extraXpPopup" class="extra-xp-popup" role="status" aria-live="polite" hidden></div>
-      <div id="overlay" class="overlay visible" aria-live="polite"></div>
-
-      <div class="touch-controls" aria-label="Touch controls">
-        <button id="leftButton" type="button" aria-label="Move left">←</button>
-        <button id="jumpButton" class="action-button" type="button" aria-label="Jump">JUMP</button>
-        <button id="crouchButton" class="action-button" type="button" aria-label="Crouch">CROUCH</button>
-        <button id="rightButton" type="button" aria-label="Move right">→</button>
-      </div>
-    </div>
-
+      <section class="playfield" aria-label="STARWELL game">
+        <canvas id="gameCanvas" width="900" height="600" aria-label="A zero-gravity space survival game"></canvas>
+        <div class="world-label"><span class="live-dot"></span><span id="worldLabel">THE OUTER RIM</span></div>
+        <div id="challengeTracker" class="challenge-tracker" aria-live="polite" hidden></div>
+        <div id="extraXpPopup" class="extra-xp-popup" role="status" aria-live="polite" hidden></div>
+        <div id="overlay" class="overlay visible" aria-live="polite"></div>
+        <div class="controls-hint"><kbd>W A S D</kbd> / <kbd>← ↑ ↓ →</kbd> steer <span>·</span> <kbd>SPACE</kbd> burst</div>
+        <div class="touch-controls" aria-label="Flight controls">
+          <div class="dpad">
+            <button id="jumpButton" type="button" aria-label="Thrust up">↑</button>
+            <button id="leftButton" type="button" aria-label="Thrust left">←</button>
+            <button id="crouchButton" type="button" aria-label="Thrust down">↓</button>
+            <button id="rightButton" type="button" aria-label="Thrust right">→</button>
+          </div>
+          <button id="boostButton" class="boost-button" type="button" aria-label="Boost">BURST</button>
+        </div>
+      </section>
+      <footer class="footer"><span>KEEP MOVING. TRUST NOTHING.</span><span id="boostStatus">BURST READY</span></footer>
+    </main>
     <script src="game.js"></script>
   </body>
 </html>
