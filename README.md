@@ -1,33 +1,27 @@
-# STARWELL
+# BREAKWAVE
 
-STARWELL is a zero-gravity arcade survival game. Steer a small ship through a
-star system collapsing toward a central black hole, collect luminous fragments,
-and stay ahead of incoming debris. The game update files are published at
-https://pelleand3-droid.github.io/sloperush/.
+BREAKWAVE is a colorful paddle-and-ball arcade game. Keep the ball in play,
+break through each block wall, and catch falling power-ups. The public game is
+published at https://pelleand3-droid.github.io/sloperush/.
 
-## Flight and scoring
+## How to play
 
-Use **WASD** or the **arrow keys** to thrust. Your ship has inertia: release the
-controls to drift, and steer against your momentum to slow down. Press **Space**
-or **Burst** for a quick directional acceleration; the burst recharges after
-2.4 seconds. Avoid the black hole, debris, and the edge of the flight zone.
-Survival time and collected fragments both add to your signal score.
+Move the paddle with the **left and right arrow keys**, **A / D**, or your
+mouse. Press **Space** or click the playfield to launch a ball. Catch falling
+**↔** power-ups to widen your paddle and **+** power-ups to earn an extra ball.
+Use **Shift** or **Pulse** for a temporary wide-paddle boost. Clear a wall to
+advance to the next round; each round adds tougher blocks.
 
-On touch screens, use the on-screen direction pad and Burst button. The game
-keeps the existing online accounts, personal bests, leaderboards, daily
-challenges, and XP rewards.
+On touch screens, hold the on-screen arrows to move, then tap **Launch** to
+serve and **Pulse** for the special ability. The game keeps existing online
+accounts, personal bests, leaderboards, daily challenges, and XP rewards.
 
-## Extra XP
+## XP and music
 
-Collecting a fragment awards 10 XP. Completing a challenge awards 10 XP.
-Reaching each 1,000-point score milestone awards another 100 XP. XP and
-unlocked ship colors are stored on each player's device.
-
-## Background music
-
-STARWELL plays an original synthesized music loop. Use the music icon in the
-top bar to turn it on or off. Playback starts after the first player interaction
-to comply with browser autoplay restrictions; no separate audio file is needed.
+Breaking blocks, catching power-ups, completing challenges, and reaching each
+1,000-point score milestone award XP. XP and unlocked paddle colors are stored
+on each player's device. Use the music icon in the top bar to toggle the
+synthesized soundtrack; playback begins after the first player interaction.
 
 ## Publishing updates
 

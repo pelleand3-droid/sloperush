@@ -44,29 +44,29 @@ let musicStep = 0;
 let nextMusicNoteTime = 0;
 const CHALLENGE_GROUPS = [
   [
-    { id: 'score-250', title: 'Score 250 this run', metric: 'runScore', target: 250, unit: 'pts' },
-    { id: 'score-400', title: 'Score 400 this run', metric: 'runScore', target: 400, unit: 'pts' },
-    { id: 'score-600', title: 'Score 600 this run', metric: 'runScore', target: 600, unit: 'pts' },
+    { id: 'breakwave-score-500', title: 'Score 500 points', metric: 'runScore', target: 500, unit: 'pts' },
+    { id: 'breakwave-score-1000', title: 'Score 1,000 points', metric: 'runScore', target: 1000, unit: 'pts' },
+    { id: 'breakwave-score-2000', title: 'Score 2,000 points', metric: 'runScore', target: 2000, unit: 'pts' },
   ],
   [
-    { id: 'survive-20', title: 'Survive 20 sec', metric: 'runTime', target: 20, unit: 'sec' },
-    { id: 'survive-35', title: 'Survive 35 sec', metric: 'runTime', target: 35, unit: 'sec' },
-    { id: 'survive-50', title: 'Survive 50 sec', metric: 'runTime', target: 50, unit: 'sec' },
+    { id: 'breakwave-time-30', title: 'Play for 30 seconds', metric: 'runTime', target: 30, unit: 'sec' },
+    { id: 'breakwave-time-60', title: 'Play for 60 seconds', metric: 'runTime', target: 60, unit: 'sec' },
+    { id: 'breakwave-time-90', title: 'Play for 90 seconds', metric: 'runTime', target: 90, unit: 'sec' },
   ],
   [
-    { id: 'fragments-5', title: 'Collect 5 fragments', metric: 'clears', target: 5, unit: 'fragments' },
-    { id: 'fragments-10', title: 'Collect 10 fragments', metric: 'clears', target: 10, unit: 'fragments' },
-    { id: 'fragments-15', title: 'Collect 15 fragments', metric: 'clears', target: 15, unit: 'fragments' },
+    { id: 'breakwave-blocks-15', title: 'Break 15 blocks', metric: 'clears', target: 15, unit: 'blocks' },
+    { id: 'breakwave-blocks-30', title: 'Break 30 blocks', metric: 'clears', target: 30, unit: 'blocks' },
+    { id: 'breakwave-blocks-50', title: 'Break 50 blocks', metric: 'clears', target: 50, unit: 'blocks' },
   ],
   [
-    { id: 'burst-4', title: 'Burst 4 times', metric: 'jumpClears', target: 4, unit: 'bursts' },
-    { id: 'burst-7', title: 'Burst 7 times', metric: 'jumpClears', target: 7, unit: 'bursts' },
-    { id: 'burst-10', title: 'Burst 10 times', metric: 'jumpClears', target: 10, unit: 'bursts' },
+    { id: 'breakwave-combo-5', title: 'Break 5 blocks in a row', metric: 'jumpClears', target: 5, unit: 'blocks' },
+    { id: 'breakwave-combo-10', title: 'Break 10 blocks in a row', metric: 'jumpClears', target: 10, unit: 'blocks' },
+    { id: 'breakwave-combo-15', title: 'Break 15 blocks in a row', metric: 'jumpClears', target: 15, unit: 'blocks' },
   ],
   [
-    { id: 'close-call-3', title: 'Pass close to 3 hazards', metric: 'crouchClears', target: 3, unit: 'close calls' },
-    { id: 'close-call-5', title: 'Pass close to 5 hazards', metric: 'crouchClears', target: 5, unit: 'close calls' },
-    { id: 'close-call-8', title: 'Pass close to 8 hazards', metric: 'crouchClears', target: 8, unit: 'close calls' },
+    { id: 'breakwave-pulse-1', title: 'Use paddle pulse once', metric: 'crouchClears', target: 1, unit: 'uses' },
+    { id: 'breakwave-pulse-3', title: 'Use paddle pulse 3 times', metric: 'crouchClears', target: 3, unit: 'uses' },
+    { id: 'breakwave-pulse-5', title: 'Use paddle pulse 5 times', metric: 'crouchClears', target: 5, unit: 'uses' },
   ],
 ];
 const RUNNER_SKINS = [
@@ -464,7 +464,7 @@ async function showLeaderboard() {
   state.started = false;
   overlayEl.innerHTML = `
     <div class="leaderboard-card">
-      <p class="eyebrow">STARWELL signal records</p>
+      <p class="eyebrow">BREAKWAVE arcade records</p>
       <h1>Leaderboard</h1>
       <div class="leaderboard-tabs" role="group" aria-label="Leaderboard period">
         <button class="leaderboard-tab" type="button" data-leaderboard-period="hourly" aria-pressed="false">Last hour</button>
@@ -549,7 +549,7 @@ function showLauncherUpdateRequired() {
     <section class="auth-card launcher-update-card">
       <p class="eyebrow">Launcher update required</p>
       <h1>Update to keep playing</h1>
-      <p class="auth-description">STARWELL needs the Slope Rush v1.0.4 launcher to play. The updated launcher installs future game and launcher updates automatically.</p>
+      <p class="auth-description">BREAKWAVE needs the Slope Rush v1.0.4 launcher to play. The updated launcher installs future game and launcher updates automatically.</p>
       <a class="start-button launcher-update-link" href="${LATEST_LAUNCHER_URL}">Download launcher v1.0.4</a>
       <p class="hint">After it finishes downloading, open SlopeRush.exe to start the game.</p>
     </section>
@@ -679,8 +679,8 @@ function challengePanelMarkup() {
           <span>Next: ${escapeHtml(nextSkin.name)} · Lv ${level + 1}</span>
         </summary>
         <div class="skin-equipped">
-          <label for="skinSelect">Choose a ship color</label>
-          <select id="skinSelect" aria-label="Choose an unlocked ship color">
+          <label for="skinSelect">Choose a paddle color</label>
+          <select id="skinSelect" aria-label="Choose an unlocked paddle color">
             ${Array.from({ length: level }, (_, index) => {
               const skinLevel = index + 1;
               const unlocked = skinForLevel(skinLevel);
@@ -1552,7 +1552,9 @@ overlayEl.addEventListener('change', (event) => {
 });
 overlayEl.addEventListener('submit', handleAuthSubmit);
 signOutButton.addEventListener('click', signOut);
-document.addEventListener('keydown', handleKeyDown);
+document.addEventListener('keydown', (event) => {
+  if (!window.breakwaveInputHandler) handleKeyDown(event);
+});
 musicToggleButton.addEventListener('click', () => {
   musicEnabled = !musicEnabled;
   updateMusicToggle();
@@ -2204,3 +2206,656 @@ boostButton.addEventListener('click', fireBoost);
 bestEl.textContent = '0';
 requestAnimationFrame(gameLoop);
 initialize();
+
+
+const blockPalette = ['#fa826c', '#f4b647', '#b6cc65', '#55bca3', '#5a9ed1', '#a88bc1'];
+const breakwave = {
+  paddleX: canvas.width / 2,
+  paddleY: canvas.height - 46,
+  paddleWidth: 112,
+  basePaddleWidth: 112,
+  paddleHeight: 13,
+  ball: { x: canvas.width / 2, y: canvas.height - 65, vx: 0, vy: 0, radius: 8 },
+  bricks: [],
+  drops: [],
+  particles: [],
+  keys: new Set(),
+  targetX: null,
+  launched: false,
+  balls: 3,
+  round: 1,
+  combo: 0,
+  clearedBricks: 0,
+  pulseReadyAt: 0,
+  pulseUntil: 0,
+  pulseActive: false,
+  wideUntil: 0,
+  lastExtraXpBrick: 0,
+};
+
+function createBrickWave() {
+  const rows = 6;
+  const columns = 10;
+  const gap = 7;
+  const width = 72;
+  const height = 22;
+  const left = (canvas.width - columns * width - (columns - 1) * gap) / 2;
+  breakwave.bricks = [];
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const armored = breakwave.round > 1 && row < Math.min(2, 1 + Math.floor(breakwave.round / 3));
+      breakwave.bricks.push({
+        x: left + column * (width + gap),
+        y: 82 + row * (height + gap),
+        width,
+        height,
+        row,
+        hp: armored ? Math.min(3, 1 + Math.floor(breakwave.round / 3)) : 1,
+        maxHp: armored ? Math.min(3, 1 + Math.floor(breakwave.round / 3)) : 1,
+        alive: true,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+  worldLabelEl.textContent = `ROUND ${String(breakwave.round).padStart(2, '0')}`;
+}
+
+function attachBallToPaddle() {
+  breakwave.ball.x = breakwave.paddleX;
+  breakwave.ball.y = breakwave.paddleY - breakwave.ball.radius - 2;
+  breakwave.ball.vx = 0;
+  breakwave.ball.vy = 0;
+  breakwave.launched = false;
+}
+
+function updateBallCount() {
+  shardsEl.textContent = String(breakwave.balls);
+}
+
+function showWelcome() {
+  document.activeElement.blur();
+  overlayEl.innerHTML = `
+    <div class="overlay-content welcome-screen">
+      <p class="eyebrow">The neighborhood arcade is open</p>
+      <h1>BREAK<span>WAVE</span></h1>
+      <p class="welcome-copy">One paddle. One ball. A whole wall of trouble. Keep the rally alive, crack the colorful blocks, and grab the good stuff when it falls.</p>
+      ${challengePanelMarkup()}
+      <button class="start-button" type="button">Start a rally</button>
+      <button class="auth-switch" type="button" data-show-leaderboard>See the high-score board</button>
+    </div>
+  `;
+  overlayEl.scrollTop = 0;
+  overlayEl.querySelector('.overlay-content').scrollTop = 0;
+  overlayEl.classList.add('visible');
+  accountNameEl.textContent = state.username;
+  accountBar.hidden = false;
+  renderChallengeTracker();
+}
+
+function showRunComplete(score, status = '') {
+  document.activeElement.blur();
+  overlayEl.innerHTML = `
+    <div class="overlay-content run-complete">
+      <p class="eyebrow">Rally over · ${breakwave.round} ${breakwave.round === 1 ? 'round' : 'rounds'} reached</p>
+      <h1>GOOD GAME.</h1>
+      <p>You scored <strong>${score.toLocaleString()}</strong></p>
+      ${challengePanelMarkup()}
+      <p class="hint">${escapeHtml(status)}</p>
+      <button class="start-button" type="button">Play again</button>
+      <button class="auth-switch" type="button" data-show-leaderboard>See the high-score board</button>
+      <p class="hint">Move with ← → or A / D · Space to launch</p>
+    </div>
+  `;
+  overlayEl.scrollTop = 0;
+  overlayEl.querySelector('.overlay-content').scrollTop = 0;
+  overlayEl.classList.add('visible');
+}
+
+function updateRunChallenges() {
+  if (!state.challengeData) return;
+  updateChallengeMetric('runScore', Math.floor(state.score));
+  updateChallengeMetric('runTime', Math.floor(state.runTime));
+}
+
+function recordObstacleClear(action) {
+  if (!state.challengeData) return;
+  if (action === 'brick') {
+    breakwave.clearedBricks += 1;
+    breakwave.combo += 1;
+    updateChallengeMetric('clears', breakwave.clearedBricks);
+    updateChallengeMetric('jumpClears', breakwave.combo);
+    if (breakwave.clearedBricks % 5 === 0) awardExtraXp(10);
+  } else if (action === 'pulse') {
+    updateChallengeMetric('crouchClears', 1, true);
+  }
+}
+
+function startGame() {
+  if (!state.username || !state.session) {
+    showAuth();
+    return;
+  }
+  if (musicEnabled) startMusic();
+  state.started = true;
+  state.score = 0;
+  state.runTime = 0;
+  state.elapsed = 0;
+  state.nextScoreXpMilestone = SCORE_XP_MILESTONE;
+  state.lastTimestamp = performance.now();
+  breakwave.paddleX = canvas.width / 2;
+  breakwave.paddleWidth = breakwave.basePaddleWidth;
+  breakwave.balls = 3;
+  breakwave.round = 1;
+  breakwave.combo = 0;
+  breakwave.clearedBricks = 0;
+  breakwave.drops = [];
+  breakwave.particles = [];
+  breakwave.pulseReadyAt = 0;
+  breakwave.pulseUntil = 0;
+  breakwave.pulseActive = false;
+  breakwave.wideUntil = 0;
+  breakwave.lastExtraXpBrick = 0;
+  breakwave.targetX = null;
+  createBrickWave();
+  attachBallToPaddle();
+  scoreEl.textContent = '0';
+  updateBallCount();
+  boostStatusEl.textContent = 'PULSE READY';
+  extraXpPopupEl.classList.remove('visible');
+  extraXpPopupEl.hidden = true;
+  renderChallengeTracker();
+  overlayEl.classList.remove('visible');
+}
+
+function endGame() {
+  if (!state.started) return;
+  state.started = false;
+  updateRunChallenges();
+  const finalScore = Math.floor(state.score);
+  showRunComplete(finalScore, 'Sending your score to the arcade board…');
+  submitScore(finalScore).then(
+    () => {
+      if (!state.started) showRunComplete(finalScore, 'High score saved to the online arcade board.');
+    },
+    (error) => {
+      if (!state.started) showRunComplete(finalScore, `High score could not sync: ${authErrorMessage(error)}`);
+    },
+  );
+}
+
+function movePlayer(direction) {
+  if (!state.started) return;
+  breakwave.targetX = null;
+  breakwave.paddleX += direction * 46;
+  clampPaddle();
+  if (!breakwave.launched) attachBallToPaddle();
+}
+
+function clampPaddle() {
+  const half = breakwave.paddleWidth / 2;
+  breakwave.paddleX = Math.max(28 + half, Math.min(canvas.width - 28 - half, breakwave.paddleX));
+}
+
+function jump() {
+  if (!state.started || breakwave.launched) return;
+  const launchDirection = breakwave.targetX === null
+    ? (breakwave.keys.has('ArrowLeft') || breakwave.keys.has('KeyA') ? -1
+      : breakwave.keys.has('ArrowRight') || breakwave.keys.has('KeyD') ? 1 : 0)
+    : Math.max(-1, Math.min(1, (breakwave.targetX - breakwave.paddleX) / 180));
+  const speed = 365 + (breakwave.round - 1) * 24;
+  breakwave.ball.vx = launchDirection * speed * 0.45;
+  breakwave.ball.vy = -Math.sqrt(speed * speed - breakwave.ball.vx * breakwave.ball.vx);
+  breakwave.launched = true;
+}
+
+function crouch() {
+  activatePaddlePulse();
+}
+
+function fireBoost() {
+  activatePaddlePulse();
+}
+
+function activatePaddlePulse() {
+  if (!state.started || state.elapsed < breakwave.pulseReadyAt) return;
+  breakwave.pulseActive = true;
+  breakwave.pulseUntil = state.elapsed + 5;
+  breakwave.wideUntil = breakwave.pulseUntil;
+  breakwave.paddleWidth = Math.min(185, breakwave.basePaddleWidth + 65);
+  breakwave.pulseReadyAt = state.elapsed + 11;
+  clampPaddle();
+  recordObstacleClear('pulse');
+}
+
+function handleKeyDown(event) {
+  if (event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+  const key = event.code;
+  if (['ArrowLeft', 'ArrowRight', 'Space'].includes(key)) event.preventDefault();
+  if (event.repeat && ['Space', 'ShiftLeft', 'ShiftRight'].includes(key)) return;
+  if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(key)) {
+    breakwave.targetX = null;
+    breakwave.keys.add(key);
+    return;
+  }
+  if (key === 'Space') {
+    if (state.started) jump();
+    else if (state.username) startGame();
+    return;
+  }
+  if (key === 'ShiftLeft' || key === 'ShiftRight') activatePaddlePulse();
+}
+
+function handleBreakwaveKeyUp(event) {
+  breakwave.keys.delete(event.code);
+}
+
+function emitParticles(x, y, color, count = 8) {
+  for (let i = 0; i < count; i += 1) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 45 + Math.random() * 150;
+    breakwave.particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0.35 + Math.random() * 0.35,
+      maxLife: 0.7,
+      size: 2 + Math.random() * 3,
+      color,
+    });
+  }
+}
+
+function dropPowerUp(brick) {
+  if (Math.random() > 0.13) return;
+  const type = Math.random() < 0.72 ? 'wide' : 'life';
+  breakwave.drops.push({
+    x: brick.x + brick.width / 2,
+    y: brick.y + brick.height / 2,
+    type,
+    vy: 95,
+    phase: Math.random() * Math.PI * 2,
+  });
+}
+
+function hitBrick(brick, previousX, previousY) {
+  const overlapX = breakwave.ball.x + breakwave.ball.radius > brick.x
+    && breakwave.ball.x - breakwave.ball.radius < brick.x + brick.width;
+  const overlapY = breakwave.ball.y + breakwave.ball.radius > brick.y
+    && breakwave.ball.y - breakwave.ball.radius < brick.y + brick.height;
+  if (!overlapX || !overlapY) return false;
+
+  const fromTop = previousY + breakwave.ball.radius <= brick.y;
+  const fromBottom = previousY - breakwave.ball.radius >= brick.y + brick.height;
+  const fromLeft = previousX + breakwave.ball.radius <= brick.x;
+  const fromRight = previousX - breakwave.ball.radius >= brick.x + brick.width;
+  if (fromTop || fromBottom) breakwave.ball.vy *= -1;
+  else if (fromLeft || fromRight) breakwave.ball.vx *= -1;
+  else breakwave.ball.vy *= -1;
+
+  brick.hp -= 1;
+  state.score += brick.hp <= 0 ? 50 + (5 - brick.row) * 10 : 20;
+  scoreEl.textContent = String(Math.floor(state.score));
+  emitParticles(breakwave.ball.x, breakwave.ball.y, blockPalette[brick.row], brick.hp <= 0 ? 12 : 5);
+  if (brick.hp <= 0) {
+    brick.alive = false;
+    recordObstacleClear('brick');
+    dropPowerUp(brick);
+  }
+  return true;
+}
+
+function loseBall() {
+  breakwave.balls -= 1;
+  breakwave.combo = 0;
+  updateBallCount();
+  if (breakwave.balls <= 0) {
+    endGame();
+    return;
+  }
+  attachBallToPaddle();
+}
+
+function nextBrickWave() {
+  breakwave.round += 1;
+  breakwave.balls = Math.min(5, breakwave.balls + 1);
+  breakwave.paddleWidth = breakwave.basePaddleWidth;
+  breakwave.pulseActive = false;
+  createBrickWave();
+  attachBallToPaddle();
+  updateBallCount();
+}
+
+function update(delta) {
+  if (!state.started) return;
+  const seconds = Math.min(delta / 1000, 0.05);
+  state.elapsed += seconds;
+  state.runTime += seconds;
+  const direction = Number(
+    breakwave.keys.has('ArrowRight') || breakwave.keys.has('KeyD') || flightInput.x > 0.25,
+  ) - Number(
+    breakwave.keys.has('ArrowLeft') || breakwave.keys.has('KeyA') || flightInput.x < -0.25,
+  );
+
+  if (direction !== 0) breakwave.targetX = null;
+  if (breakwave.targetX !== null) {
+    const approach = 1050 * seconds;
+    breakwave.paddleX += Math.max(-approach, Math.min(approach, breakwave.targetX - breakwave.paddleX));
+  } else {
+    breakwave.paddleX += direction * 590 * seconds;
+  }
+  clampPaddle();
+
+  if (!breakwave.launched) {
+    attachBallToPaddle();
+  } else {
+    const ball = breakwave.ball;
+    const previousX = ball.x;
+    const previousY = ball.y;
+    ball.x += ball.vx * seconds;
+    ball.y += ball.vy * seconds;
+
+    if (ball.x - ball.radius < 28) {
+      ball.x = 28 + ball.radius;
+      ball.vx = Math.abs(ball.vx);
+    } else if (ball.x + ball.radius > canvas.width - 28) {
+      ball.x = canvas.width - 28 - ball.radius;
+      ball.vx = -Math.abs(ball.vx);
+    }
+    if (ball.y - ball.radius < 58) {
+      ball.y = 58 + ball.radius;
+      ball.vy = Math.abs(ball.vy);
+    }
+
+    if (ball.vy > 0 && previousY + ball.radius <= breakwave.paddleY
+      && ball.y + ball.radius >= breakwave.paddleY
+      && ball.x >= breakwave.paddleX - breakwave.paddleWidth / 2 - ball.radius
+      && ball.x <= breakwave.paddleX + breakwave.paddleWidth / 2 + ball.radius) {
+      const offset = (ball.x - breakwave.paddleX) / (breakwave.paddleWidth / 2);
+      const speed = Math.min(590, Math.hypot(ball.vx, ball.vy) * 1.012);
+      const angle = offset * 1.04;
+      ball.vx = Math.sin(angle) * speed;
+      ball.vy = -Math.max(180, Math.cos(angle) * speed);
+      ball.y = breakwave.paddleY - ball.radius - 1;
+      breakwave.combo = Math.max(breakwave.combo, 1);
+      emitParticles(ball.x, breakwave.paddleY, '#fff3cb', 4);
+    } else if (ball.y - ball.radius > canvas.height) {
+      loseBall();
+      if (!state.started) return;
+    }
+
+    for (const brick of breakwave.bricks) {
+      if (!brick.alive) continue;
+      if (hitBrick(brick, previousX, previousY)) break;
+    }
+  }
+
+  const paddleLeft = breakwave.paddleX - breakwave.paddleWidth / 2;
+  for (let i = breakwave.drops.length - 1; i >= 0; i -= 1) {
+    const drop = breakwave.drops[i];
+    drop.y += drop.vy * seconds;
+    drop.phase += seconds * 4;
+    if (drop.y + 10 >= breakwave.paddleY && drop.y - 10 <= breakwave.paddleY + 10
+      && drop.x >= paddleLeft - 7 && drop.x <= paddleLeft + breakwave.paddleWidth + 7) {
+      if (drop.type === 'wide') {
+        breakwave.paddleWidth = Math.min(185, breakwave.basePaddleWidth + 65);
+        breakwave.wideUntil = Math.max(breakwave.wideUntil, state.elapsed + 8);
+        clampPaddle();
+      } else {
+        breakwave.balls = Math.min(5, breakwave.balls + 1);
+        updateBallCount();
+      }
+      state.score += 25;
+      scoreEl.textContent = String(Math.floor(state.score));
+      awardExtraXp(5);
+      emitParticles(drop.x, drop.y, drop.type === 'wide' ? '#167968' : '#f27b66', 10);
+      breakwave.drops.splice(i, 1);
+    } else if (drop.y > canvas.height + 20) {
+      breakwave.drops.splice(i, 1);
+    }
+  }
+
+  for (let i = breakwave.particles.length - 1; i >= 0; i -= 1) {
+    const particle = breakwave.particles[i];
+    particle.x += particle.vx * seconds;
+    particle.y += particle.vy * seconds;
+    particle.vx *= 0.97;
+    particle.vy *= 0.97;
+    particle.life -= seconds;
+    if (particle.life <= 0) breakwave.particles.splice(i, 1);
+  }
+
+  if (breakwave.pulseActive && state.elapsed >= breakwave.pulseUntil) {
+    breakwave.pulseActive = false;
+  }
+  if (state.elapsed >= breakwave.wideUntil && breakwave.paddleWidth !== breakwave.basePaddleWidth) {
+    breakwave.paddleWidth = breakwave.basePaddleWidth;
+    clampPaddle();
+  }
+  boostStatusEl.textContent = state.elapsed < breakwave.pulseReadyAt
+    ? `PULSE ${Math.ceil(breakwave.pulseReadyAt - state.elapsed)}`
+    : 'PULSE READY';
+
+  while (state.score >= state.nextScoreXpMilestone) {
+    awardExtraXp(SCORE_MILESTONE_XP);
+    state.nextScoreXpMilestone += SCORE_XP_MILESTONE;
+  }
+  updateRunChallenges();
+
+  if (breakwave.bricks.length && breakwave.bricks.every((brick) => !brick.alive)) nextBrickWave();
+}
+
+function roundedRect(x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+function drawBackground() {
+  ctx.fillStyle = '#ebe4d4';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(57, 91, 73, 0.11)';
+  for (let y = 44; y < canvas.height; y += 14) {
+    for (let x = 26; x < canvas.width; x += 14) {
+      if ((x + y) % 4 === 0) ctx.fillRect(x, y, 1.5, 1.5);
+    }
+  }
+
+  ctx.fillStyle = '#f8f5ed';
+  roundedRect(28, 54, canvas.width - 56, canvas.height - 82, 8);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(29, 41, 37, 0.16)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(29, 41, 37, 0.47)';
+  ctx.font = '10px Cascadia Code, Consolas, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('BREAKWAVE  /  CITY ARCADE', 48, 34);
+  ctx.textAlign = 'right';
+  ctx.fillText(`ROUND ${String(breakwave.round).padStart(2, '0')}`, canvas.width - 48, 34);
+  ctx.textAlign = 'left';
+
+  ctx.strokeStyle = 'rgba(29, 41, 37, 0.12)';
+  ctx.beginPath();
+  ctx.moveTo(48, 66);
+  ctx.lineTo(canvas.width - 48, 66);
+  ctx.stroke();
+}
+
+function drawBrick(brick) {
+  const color = blockPalette[brick.row];
+  ctx.save();
+  ctx.globalAlpha = brick.hp === 1 ? 1 : 0.78 + Math.sin(state.elapsed * 7 + brick.phase) * 0.1;
+  ctx.fillStyle = color;
+  roundedRect(brick.x, brick.y, brick.width, brick.height, 5);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.32)';
+  roundedRect(brick.x + 2, brick.y + 2, brick.width - 4, 4, 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(29, 41, 37, 0.13)';
+  roundedRect(brick.x + 3, brick.y + brick.height - 5, brick.width - 6, 2, 1);
+  ctx.fill();
+  if (brick.maxHp > 1) {
+    ctx.fillStyle = '#fff9e9';
+    ctx.font = '10px Cascadia Code, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(brick.hp), brick.x + brick.width / 2, brick.y + brick.height / 2 + 1);
+  } else if ((brick.row + Math.floor(brick.x)) % 3 === 0) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.beginPath();
+    ctx.arc(brick.x + brick.width * 0.78, brick.y + brick.height / 2, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawPaddle() {
+  const left = breakwave.paddleX - breakwave.paddleWidth / 2;
+  const colors = equippedSkin();
+  ctx.save();
+  ctx.shadowColor = colors.glow;
+  ctx.shadowBlur = breakwave.pulseActive ? 22 : 8;
+  ctx.fillStyle = colors.suit;
+  roundedRect(left, breakwave.paddleY, breakwave.paddleWidth, breakwave.paddleHeight, 7);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+  roundedRect(left + 8, breakwave.paddleY + 3, breakwave.paddleWidth - 16, 3, 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBall() {
+  const ball = breakwave.ball;
+  ctx.save();
+  ctx.shadowColor = '#f0a945';
+  ctx.shadowBlur = 16;
+  ctx.fillStyle = '#f2bf46';
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fff8df';
+  ctx.beginPath();
+  ctx.arc(ball.x - 2, ball.y - 2, 2.4, 0, Math.PI * 2);
+  ctx.fill();
+  if (!breakwave.launched && state.started) {
+    ctx.fillStyle = 'rgba(29, 41, 37, 0.55)';
+    ctx.font = '10px Cascadia Code, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('CLICK OR SPACE', breakwave.ball.x, breakwave.ball.y - 19);
+  }
+  ctx.restore();
+}
+
+function drawDrops() {
+  for (const drop of breakwave.drops) {
+    const color = drop.type === 'wide' ? '#167968' : '#f27b66';
+    ctx.save();
+    ctx.translate(drop.x, drop.y);
+    ctx.rotate(Math.sin(drop.phase) * 0.13);
+    ctx.fillStyle = color;
+    roundedRect(-13, -9, 26, 18, 8);
+    ctx.fill();
+    ctx.fillStyle = '#fffaf0';
+    ctx.font = 'bold 12px Trebuchet MS, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(drop.type === 'wide' ? '↔' : '+', 0, 0);
+    ctx.restore();
+  }
+}
+
+function drawParticles() {
+  for (const particle of breakwave.particles) {
+    ctx.globalAlpha = Math.min(1, particle.life / particle.maxLife);
+    ctx.fillStyle = particle.color;
+    ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function draw() {
+  drawBackground();
+  for (const brick of breakwave.bricks) {
+    if (brick.alive) drawBrick(brick);
+  }
+  drawDrops();
+  drawPaddle();
+  drawBall();
+  drawParticles();
+}
+
+function gameLoop(timestamp) {
+  const delta = state.lastTimestamp ? Math.min(timestamp - state.lastTimestamp, 50) : 16;
+  state.lastTimestamp = timestamp;
+  update(delta);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function bindBreakwavePointer() {
+  canvas.addEventListener('pointermove', (event) => {
+    if (!state.started || event.pointerType === 'touch') return;
+    const bounds = canvas.getBoundingClientRect();
+    breakwave.targetX = ((event.clientX - bounds.left) / bounds.width) * canvas.width;
+    clampPaddle();
+    if (!breakwave.launched) attachBallToPaddle();
+  });
+  canvas.addEventListener('pointerdown', (event) => {
+    if (!state.started) return;
+    const bounds = canvas.getBoundingClientRect();
+    breakwave.targetX = ((event.clientX - bounds.left) / bounds.width) * canvas.width;
+    clampPaddle();
+    if (!breakwave.launched) {
+      attachBallToPaddle();
+      jump();
+    }
+    canvas.focus({ preventScroll: true });
+  });
+}
+
+function awardExtraXp(amount) {
+  if (!state.challengeData) return;
+  const previousLevel = playerLevel();
+  state.challengeData.xp += amount;
+  const popupRect = canvas.getBoundingClientRect();
+  const shellRect = canvas.parentElement.getBoundingClientRect();
+  extraXpPopupEl.style.left = `${popupRect.left - shellRect.left + popupRect.width * breakwave.ball.x / canvas.width}px`;
+  extraXpPopupEl.style.top = `${popupRect.top - shellRect.top + popupRect.height * breakwave.ball.y / canvas.height}px`;
+  extraXpPopupEl.textContent = `+${amount.toLocaleString()} XP`;
+  extraXpPopupEl.hidden = false;
+  extraXpPopupEl.classList.remove('visible');
+  void extraXpPopupEl.offsetWidth;
+  extraXpPopupEl.classList.add('visible');
+  const messageId = ++state.extraXpMessageId;
+  window.setTimeout(() => {
+    if (state.extraXpMessageId !== messageId) return;
+    extraXpPopupEl.classList.remove('visible');
+    extraXpPopupEl.hidden = true;
+  }, 1800);
+  updateLevelUpMessage(previousLevel);
+  saveChallengeData();
+  renderChallengeTracker();
+}
+
+function updateMusicToggle() {
+  musicToggleButton.textContent = musicEnabled ? '♫' : '♪';
+  musicToggleButton.setAttribute('aria-pressed', String(musicEnabled));
+  musicToggleButton.setAttribute('aria-label', `Turn music ${musicEnabled ? 'off' : 'on'}`);
+  musicToggleButton.title = `Music ${musicEnabled ? 'on' : 'off'}`;
+}
+
+window.breakwaveInputHandler = handleKeyDown;
+document.addEventListener('keydown', (event) => window.breakwaveInputHandler(event));
+document.addEventListener('keyup', handleBreakwaveKeyUp);
+crouchButton.setAttribute('aria-label', 'Activate paddle pulse');
+boostButton.addEventListener('click', activatePaddlePulse);
+bindBreakwavePointer();
