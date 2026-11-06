@@ -1,0 +1,180 @@
+:root {
+  color-scheme: dark;
+  --ink: #edf2f7;
+  --muted: #9daaba;
+  --accent: #f4b65f;
+  --line: rgba(215, 227, 239, 0.18);
+  --mono: 'Cascadia Code', Consolas, monospace;
+  --sans: 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  background: #101722;
+  color: var(--ink);
+  font-family: var(--sans);
+}
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background-image: radial-gradient(rgba(196, 209, 225, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+button { font: inherit; color: inherit; }
+
+.game-shell {
+  width: min(1080px, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(215, 227, 239, 0.25);
+  border-radius: 12px;
+  background: #111b29;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+}
+
+.topbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand span { color: var(--accent); font-size: 23px; }
+.hud { display: flex; gap: clamp(18px, 5vw, 52px); margin-left: auto; }
+.stat { min-width: 62px; display: grid; gap: 3px; }
+.label, .eyebrow, .footer, .overlay-hint { font-family: var(--mono); letter-spacing: 0.1em; text-transform: uppercase; }
+.label { color: var(--muted); font-size: 9px; }
+.stat strong { font-family: var(--mono); font-size: 16px; }
+.stat:first-child strong { color: var(--accent); }
+.sprint-stat { min-width: 76px; display: grid; align-content: center; gap: 5px; }
+.sprint-stat progress { width: 76px; height: 7px; border: 0; border-radius: 8px; overflow: hidden; appearance: none; background: rgba(255,255,255,.16); }
+.sprint-stat progress::-webkit-progress-bar { border-radius: 8px; background: rgba(255,255,255,.16); }
+.sprint-stat progress::-webkit-progress-value { border-radius: 8px; background: #d3a66b; transition: width .1s linear; }
+.sprint-stat progress::-moz-progress-bar { border-radius: 8px; background: #d3a66b; }
+
+.playfield { position: relative; overflow: hidden; background: #7eafca; }
+#gameCanvas { display: block; width: 100%; aspect-ratio: 3 / 2; touch-action: none; }
+.playfield.is-looking #gameCanvas { cursor: grabbing; }
+.playfield #gameCanvas { cursor: grab; }
+.look-hint {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(235, 239, 237, 0.24);
+  border-radius: 3px;
+  background: rgba(25, 34, 39, 0.54);
+  color: rgba(246, 239, 224, 0.8);
+  font: 8px var(--mono);
+  letter-spacing: 0.12em;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+.look-icon { color: #f4b65f; font: 17px var(--sans); }
+.world-label {
+  position: absolute;
+  top: 16px;
+  left: 18px;
+  color: rgba(255, 255, 255, 0.78);
+  font: 9px var(--mono);
+  letter-spacing: 0.15em;
+  text-shadow: 0 1px 5px rgba(15, 25, 38, 0.65);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(12, 19, 28, 0.64);
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.overlay.visible { opacity: 1; pointer-events: auto; }
+.overlay-card { display: grid; justify-items: center; gap: 14px; max-width: 600px; text-align: center; }
+.eyebrow { margin: 0; color: var(--accent); font-size: 9px; font-weight: 700; }
+h1 { margin: 0; font-size: clamp(48px, 10vw, 88px); font-weight: 900; letter-spacing: -0.08em; line-height: 0.9; }
+h1 span { color: var(--accent); }
+#overlayCopy { margin: 0; color: #e1e6eb; font-size: 14px; line-height: 1.7; }
+.start-button {
+  min-width: 180px;
+  margin-top: 5px;
+  padding: 13px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent);
+  color: #1d2022;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(244, 182, 95, 0.2);
+}
+
+.start-button:hover, .start-button:focus-visible { background: #ffd28b; outline: 2px solid white; outline-offset: 3px; }
+.overlay-hint { margin: 4px 0 0; color: #d3dbe3; font-size: 9px; line-height: 1.8; }
+kbd { margin: 0 2px; padding: 2px 5px; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 3px; color: var(--ink); font: inherit; }
+.touch-controls { display: none; }
+.footer { display: flex; justify-content: space-between; gap: 12px; padding: 13px 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+
+@media (max-width: 640px) {
+  body { padding: 10px; }
+  .topbar { min-height: 62px; gap: 10px; padding: 0 14px; }
+  .brand { gap: 5px; font-size: 10px; letter-spacing: 0.08em; }
+  .brand span { font-size: 18px; }
+  .hud { gap: 14px; }
+  .stat { min-width: 48px; }
+  .label { font-size: 7px; }
+  .stat strong { font-size: 13px; }
+  .sprint-stat { min-width: 55px; }
+  .sprint-stat progress { width: 55px; }
+  .footer { padding: 10px 13px; font-size: 7px; }
+  .look-hint { right: 50%; bottom: 84px; transform: translateX(50%); white-space: nowrap; }
+  .touch-controls { position: absolute; right: 12px; bottom: 12px; left: 12px; z-index: 1; display: flex; align-items: end; justify-content: space-between; pointer-events: none; }
+  .direction-pad { display: grid; justify-items: center; gap: 4px; }
+  .direction-pad > div { display: flex; gap: 4px; }
+  .touch-controls button { width: 43px; height: 43px; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 8px; background: rgba(25, 37, 50, 0.78); color: white; font-size: 20px; touch-action: none; pointer-events: auto; }
+  .touch-controls button:active { background: rgba(118, 91, 55, 0.95); }
+  .touch-controls .jump-button { width: 72px; height: 72px; border-color: var(--accent); border-radius: 50%; color: #ffe2b7; font-size: 11px; font-weight: 900; letter-spacing: 0.06em; }
+  .touch-controls .sprint-button { width: 54px; height: 54px; border-color: rgba(211, 166, 107, .8); border-radius: 50%; color: #ffe2b7; font-size: 10px; font-weight: 900; letter-spacing: 0.06em; }
+  .overlay { padding: 18px; }
+  #overlayCopy { font-size: 12px; }
+  .overlay-hint { max-width: 290px; font-size: 7px; line-height: 2.3; }
+}
+
+@media (max-width: 390px) {
+  .brand { font-size: 9px; }
+  .hud { gap: 9px; }
+  .footer span:last-child { text-align: right; }
+}

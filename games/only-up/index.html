@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#28475c" />
+    <title>ONLY UP — one way is up</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="ONLY UP home"><span aria-hidden="true">↑</span> ONLY UP</a>
+        <div class="hud" aria-live="polite">
+          <div class="stat"><span class="label">Altitude</span><strong id="score">0 m</strong></div>
+          <div class="stat"><span class="label">Best climb</span><strong id="best">0 m</strong></div>
+          <div class="sprint-stat"><span class="label">Sprint</span><progress id="sprintMeter" max="100" value="100" aria-label="Sprint stamina"></progress></div>
+        </div>
+      </header>
+
+      <section class="playfield" aria-label="ONLY UP 3D endless climbing game">
+        <canvas id="gameCanvas" width="960" height="640" aria-label="Climb through a mountain valley without falling"></canvas>
+        <div class="world-label"><span id="worldLabel">THE STARTING RIDGE</span></div>
+        <div id="overlay" class="overlay visible" aria-live="polite">
+          <div class="overlay-card">
+            <p class="eyebrow">The sky is your staircase</p>
+            <h1>ONLY <span>UP</span></h1>
+            <p id="overlayCopy">Climb a twisting route of rooftops, furniture, and obstacles. Mantle high ledges, manage your sprint, and don't look down.</p>
+            <button id="startButton" class="start-button" type="button">Start climbing</button>
+            <p class="overlay-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> (A/D swapped) or arrows move · <kbd>SPACE</kbd> jump; press or hold near a high ledge, even midair, to mantle · <kbd>SHIFT</kbd> sprint · hold + drag to look · <kbd>ESC</kbd> pause</p>
+          </div>
+        </div>
+        <div class="look-hint" aria-hidden="true"><span class="look-icon">↔</span> HOLD + DRAG TO LOOK</div>
+        <div class="touch-controls" aria-label="Touch controls">
+          <div class="direction-pad">
+            <button type="button" data-control="forward" aria-label="Move forward">↑</button>
+            <div>
+              <button type="button" data-control="left" aria-label="Move left">←</button>
+              <button type="button" data-control="back" aria-label="Move back">↓</button>
+              <button type="button" data-control="right" aria-label="Move right">→</button>
+            </div>
+          </div>
+          <button class="sprint-button" type="button" data-control="sprint" aria-label="Sprint">RUN</button>
+          <button class="jump-button" id="jumpButton" type="button" aria-label="Jump">JUMP</button>
+        </div>
+      </section>
+      <footer class="footer"><span>NO CHECKPOINTS. NO WAY BACK.</span><span id="runStatus">FIND YOUR NEXT STEP</span></footer>
+    </main>
+    <script src="three.min.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>

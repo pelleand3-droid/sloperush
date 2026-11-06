@@ -33,5 +33,18 @@
       "game.js",
       "style.css"
     ]
+  },
+  {
+    "id": "only-up",
+    "name": "ONLY UP",
+    "description": "Climb a circular mountain course with jumps, mantling, and sprinting.",
+    "baseUrl": "https://pelleand3-droid.github.io/sloperush/games/only-up/",
+    "files": [
+      "index.html",
+      "game.js",
+      "style.css",
+      "three.min.js",
+      "THREE-LICENSE.txt"
+    ]
   }
 ]

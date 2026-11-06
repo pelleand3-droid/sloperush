@@ -27,8 +27,13 @@ To add a game:
 3. Add the folder and `games.json` to the Pages deployment, then publish the
    site. The current workflow already deploys the complete `games/` folder.
 
-The launcher currently includes **STARFIGHTER**, a self-contained space shooter
-in `games/starfighter/`, alongside the original Slope Rush and BREAKWAVE.
+The launcher includes **STARFIGHTER**, a self-contained space shooter in
+`games/starfighter/`, and **ONLY UP**, a 3D climbing game in `games/only-up/`,
+alongside the original Slope Rush and BREAKWAVE. ONLY UP has a circular
+obstacle route, jumping, midair mantling, sprint stamina, and a smooth
+third-person camera that follows behind the player. A/D movement is swapped;
+arrows are unchanged. Its Three.js dependency is bundled locally for offline
+play, and its license is included in the game files.
 
 The launcher only downloads games hosted under this project's HTTPS GitHub
 Pages address. Keep game files self-contained or list every required asset in
