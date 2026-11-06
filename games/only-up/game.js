@@ -12,6 +12,8 @@ const sprintMeter = document.getElementById('sprintMeter');
 
 const GRAVITY = 22;
 const JUMP_SPEED = 10.4;
+const PLAYER_RADIUS = 0.28;
+const PLAYER_HEIGHT = 1.65;
 const MOUSE_SENSITIVITY = 0.0025;
 const ROUTE_RADIUS = 16;
 const ROUTE_STEPS_PER_LAP = 32;
@@ -536,9 +538,13 @@ function createPlatform(x, z, y, width, index, generator) {
         : kind === 'fridge' ? 1.05
           : kind === 'crate' || kind === 'pallet' ? 1.18
             : kind === 'beam' ? 0.78 : kind === 'sofa' ? 1.15 : Math.max(1.55, 2.1 - stage * 0.04);
+  const collisionTopY = y + (kind === 'toilet' ? 0.285 : kind === 'tires' ? 0.34 : 0);
+  const collisionTopWidth = kind === 'toilet' ? 0.66 : kind === 'tires' ? 1.32 : platformWidth;
+  const collisionTopDepth = kind === 'toilet' ? 0.66 : kind === 'tires' ? 1.1 : depth;
   const angle = routeAngle(index);
   const platform = {
     x, z, y, width: platformWidth, depth, index, stage, kind, propHeight, mantleRequired,
+    collisionTopY, collisionTopWidth, collisionTopDepth, baseTopY: y - propHeight,
     yaw: -angle, group: new THREE.Group(),
   };
   if (mantleRequired) {
@@ -780,15 +786,14 @@ function findMantleTarget() {
 
 function positionOverlapsObstacle(platform, x, z) {
   const obstacle = platform.obstacle;
-  if (!obstacle || player.y >= platform.y - 0.06
-    || player.y + 1.65 <= platform.y - platform.propHeight) return false;
+  if (!obstacle || player.y >= platform.collisionTopY - 0.06
+    || player.y + PLAYER_HEIGHT <= platform.baseTopY) return false;
   const dx = x - platform.x;
   const dz = z - platform.z;
   const localX = Math.cos(platform.yaw) * dx - Math.sin(platform.yaw) * dz - obstacle.x;
   const localZ = Math.sin(platform.yaw) * dx + Math.cos(platform.yaw) * dz - obstacle.z;
-  const radius = 0.28;
-  return Math.abs(localX) < obstacle.width / 2 + radius
-    && Math.abs(localZ) < obstacle.depth / 2 + radius;
+  return Math.abs(localX) < obstacle.width / 2 + PLAYER_RADIUS
+    && Math.abs(localZ) < obstacle.depth / 2 + PLAYER_RADIUS;
 }
 
 function resolveObstacleCollisions(previousX, previousZ) {
@@ -949,41 +954,46 @@ function inputState() {
 
 function landOnPlatform(previousY) {
   if (player.vy > 0) return false;
-  for (const platform of platforms) {
-    const crossesTop = previousY >= platform.y && player.y <= platform.y;
-    const crossesApproach = platform.mantleRequired
-      && previousY >= platform.approachY && player.y <= platform.approachY;
-    if (!crossesTop && !crossesApproach) continue;
+  let landing = null;
+  const considerSurface = (platform, height, width, depth, advancesRoute) => {
+    if (previousY < height || player.y > height) return;
     const dx = player.x - platform.x;
     const dz = player.z - platform.z;
     const localX = Math.cos(platform.yaw) * dx - Math.sin(platform.yaw) * dz;
     const localZ = Math.sin(platform.yaw) * dx + Math.cos(platform.yaw) * dz;
-    if (crossesApproach
-      && Math.abs(localX + platform.approachWidth / 2) <= platform.approachWidth / 2 - 0.13
-      && Math.abs(localZ) <= 0.38) {
-      player.y = platform.approachY;
-      player.vy = 0;
-      player.onGround = true;
-      lastSafeHeight = Math.max(lastSafeHeight, platform.approachY);
-      landingTimer = 0.2;
-      return true;
+    if (Math.abs(localX) > width / 2 + PLAYER_RADIUS
+      || Math.abs(localZ) > depth / 2 + PLAYER_RADIUS) return;
+    if (!landing || height > landing.height) landing = { platform, height, advancesRoute };
+  };
+
+  for (const platform of platforms) {
+    considerSurface(
+      platform,
+      platform.collisionTopY,
+      platform.collisionTopWidth,
+      platform.collisionTopDepth,
+      true,
+    );
+    if (platform.baseTopY < platform.collisionTopY - 0.01) {
+      considerSurface(platform, platform.baseTopY, platform.width + 0.14, platform.depth + 0.14, true);
     }
-    if (!crossesTop) continue;
-    if (Math.abs(localX) <= platform.width / 2 - 0.13
-      && Math.abs(localZ) <= platform.depth / 2 - 0.13) {
-      if (platform.index > player.currentPlatformIndex) {
-        player.currentPlatformIndex = platform.index;
-        player.facing = routeYaw(platform.index);
-      }
-      player.y = platform.y;
-      player.vy = 0;
-      player.onGround = true;
-      lastSafeHeight = Math.max(lastSafeHeight, platform.y);
-      landingTimer = 0.2;
-      return true;
+    if (platform.mantleRequired) {
+      considerSurface(platform, platform.approachY, platform.approachWidth, 0.86, false);
     }
   }
-  return false;
+  if (!landing) return false;
+
+  const { platform, height, advancesRoute } = landing;
+  if (advancesRoute && platform.index > player.currentPlatformIndex) {
+    player.currentPlatformIndex = platform.index;
+    player.facing = routeYaw(platform.index);
+  }
+  player.y = height;
+  player.vy = 0;
+  player.onGround = true;
+  lastSafeHeight = Math.max(lastSafeHeight, height);
+  landingTimer = 0.2;
+  return true;
 }
 
 function updateAvatar() {
