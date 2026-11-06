@@ -32,9 +32,10 @@ The launcher includes **STARFIGHTER**, a self-contained space shooter in
 alongside the original Slope Rush and BREAKWAVE. ONLY UP has a circular
 obstacle route, jumping, midair mantling, sprint stamina, and a smooth
 third-person camera that follows behind the player. A/D movement is swapped;
-arrows are unchanged. Its Three.js dependency is bundled locally for offline
-play, and its license is included in the game files. Prop tops, support slabs,
-and the mantle runway all have matching collision surfaces.
+arrows are unchanged. Move the mouse over the game to look around. Its Three.js
+dependency is bundled locally for offline play, and its license is included
+in the game files. Prop tops, support slabs, and the mantle runway all have
+matching collision surfaces.
 
 The launcher only downloads games hosted under this project's HTTPS GitHub
 Pages address. Keep game files self-contained or list every required asset in

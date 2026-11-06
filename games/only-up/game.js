@@ -648,10 +648,9 @@ let lastFrame = 0;
 let platformIndex = 0;
 let lastSafeHeight = 0;
 let respawnTimer = 0;
-let draggingLook = false;
-let lookPointerId = null;
 let lastPointerX = 0;
 let lastPointerY = 0;
+let mouseLookTracking = false;
 let spaceWasDown = false;
 let landingTimer = 0;
 let jumpBufferTimer = 0;
@@ -893,6 +892,7 @@ function startGame() {
   rng = random((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
   cameraYaw = routeYaw(0);
   cameraViewYaw = cameraYaw;
+  mouseLookTracking = false;
   cameraPitch = -0.12;
   cameraTargetYaw = cameraYaw;
   cameraTargetPitch = cameraPitch;
@@ -933,9 +933,7 @@ function togglePause() {
   paused = !paused;
   keys.clear();
   touchKeys.clear();
-  draggingLook = false;
-  lookPointerId = null;
-  playfield.classList.remove('is-looking');
+  mouseLookTracking = false;
   if (paused) showOverlay('Take a breath. Your climb is paused.', 'Resume climb');
   else hideOverlay();
 }
@@ -1123,16 +1121,7 @@ function update(delta) {
 
 function updateCamera(delta) {
   const distance = 6.2;
-  const orbitOffset = Math.atan2(
-    Math.sin(cameraYaw - player.facing),
-    Math.cos(cameraYaw - player.facing),
-  );
-  const desiredViewYaw = player.facing + THREE.MathUtils.clamp(orbitOffset, -0.04, 0.04);
-  const viewYawDelta = Math.atan2(
-    Math.sin(desiredViewYaw - cameraViewYaw),
-    Math.cos(desiredViewYaw - cameraViewYaw),
-  );
-  cameraViewYaw += viewYawDelta * (1 - Math.exp(-1.2 * delta));
+  cameraViewYaw = cameraYaw;
   cameraPosition.set(
     player.x - Math.sin(cameraViewYaw) * distance,
     player.y + 3.4,
@@ -1192,43 +1181,37 @@ window.addEventListener('keyup', (event) => keys.delete(event.code));
 window.addEventListener('blur', () => {
   keys.clear();
   touchKeys.clear();
-  draggingLook = false;
-  lookPointerId = null;
-  playfield.classList.remove('is-looking');
+  mouseLookTracking = false;
 });
 
-canvas.addEventListener('pointerdown', (event) => {
-  if (!running || paused || (event.pointerType === 'mouse' && event.button !== 0)) return;
-  draggingLook = true;
-  lookPointerId = event.pointerId;
+canvas.addEventListener('pointerenter', (event) => {
+  if (event.pointerType !== 'mouse') return;
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
-  playfield.classList.add('is-looking');
-  canvas.setPointerCapture(event.pointerId);
-  event.preventDefault();
+  mouseLookTracking = true;
 });
 
 canvas.addEventListener('pointermove', (event) => {
-  if (!draggingLook || event.pointerId !== lookPointerId || !running || paused) return;
+  if (event.pointerType !== 'mouse' || !running || paused) return;
+  if (!mouseLookTracking) {
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    mouseLookTracking = true;
+    return;
+  }
   const deltaX = event.clientX - lastPointerX;
   const deltaY = event.clientY - lastPointerY;
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
   const fullTurn = Math.PI * 2;
-  cameraTargetYaw = ((cameraTargetYaw + deltaX * MOUSE_SENSITIVITY + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+  player.facing = ((player.facing + deltaX * MOUSE_SENSITIVITY + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+  cameraTargetYaw = player.facing;
   cameraTargetPitch = Math.max(-0.88, Math.min(0.62, cameraTargetPitch - deltaY * MOUSE_SENSITIVITY));
-  event.preventDefault();
 });
 
-function stopLooking(event) {
-  if (event.pointerId !== lookPointerId) return;
-  draggingLook = false;
-  lookPointerId = null;
-  playfield.classList.remove('is-looking');
-}
-
-canvas.addEventListener('pointerup', stopLooking);
-canvas.addEventListener('pointercancel', stopLooking);
+canvas.addEventListener('pointerleave', (event) => {
+  if (event.pointerType === 'mouse') mouseLookTracking = false;
+});
 
 for (const button of document.querySelectorAll('[data-control]')) {
   const control = button.dataset.control;
