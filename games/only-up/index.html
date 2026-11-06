@@ -16,6 +16,22 @@
           <div class="stat"><span class="label">Best climb</span><strong id="best">0 m</strong></div>
           <div class="sprint-stat"><span class="label">Sprint</span><progress id="sprintMeter" max="100" value="100" aria-label="Sprint stamina"></progress></div>
         </div>
+        <details class="multiplayer">
+          <summary class="multiplayer-toggle">Friends</summary>
+          <div class="multiplayer-panel">
+            <label for="playerName">Your name</label>
+            <input id="playerName" type="text" maxlength="18" value="Climber" autocomplete="nickname" />
+            <label for="roomCode">Room code</label>
+            <input id="roomCode" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" />
+            <div class="multiplayer-actions">
+              <button id="createRoomButton" type="button">Create room</button>
+              <button id="joinRoomButton" type="button">Join room</button>
+              <button id="copyRoomButton" type="button" hidden>Copy code</button>
+              <button id="leaveRoomButton" type="button" hidden>Leave</button>
+            </div>
+            <p id="multiplayerStatus" role="status" aria-live="polite">Create a room, then share its code with your friends.</p>
+          </div>
+        </details>
         <details class="settings">
           <summary class="settings-toggle">Settings</summary>
           <div class="settings-panel">
@@ -34,7 +50,7 @@
             <h1>ONLY <span>UP</span></h1>
             <p id="overlayCopy">Climb a twisting route of rooftops, furniture, and obstacles. Mantle high ledges, manage your sprint, and don't look down.</p>
             <button id="startButton" class="start-button" type="button">Start climbing</button>
-            <p class="overlay-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> (A/D swapped) or arrows move · <kbd>SPACE</kbd> jump; press or hold near a high ledge, even midair, to mantle · <kbd>SHIFT</kbd> sprint · move mouse to turn (reversed) · <kbd>ESC</kbd> pause</p>
+            <p class="overlay-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> (A/D swapped) or arrows move · <kbd>SPACE</kbd> jump; press or hold near a high ledge, even midair, to mantle · <kbd>SHIFT</kbd> sprint · move mouse to turn (reversed) · <kbd>ESC</kbd> pause and release mouse</p>
           </div>
         </div>
         <div class="look-hint" aria-hidden="true"><span class="look-icon">↔</span> MOVE MOUSE TO TURN</div>
@@ -54,6 +70,8 @@
       <footer class="footer"><span>NO CHECKPOINTS. NO WAY BACK.</span><span id="runStatus">FIND YOUR NEXT STEP</span></footer>
     </main>
     <script src="three.min.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
     <script src="game.js"></script>
   </body>
 </html>

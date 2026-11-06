@@ -9,6 +9,15 @@ const startButton = document.getElementById('startButton');
 const runStatus = document.getElementById('runStatus');
 const worldLabel = document.getElementById('worldLabel');
 const sprintMeter = document.getElementById('sprintMeter');
+const playerNameInput = document.getElementById('playerName');
+const roomCodeInput = document.getElementById('roomCode');
+const createRoomButton = document.getElementById('createRoomButton');
+const joinRoomButton = document.getElementById('joinRoomButton');
+const copyRoomButton = document.getElementById('copyRoomButton');
+const leaveRoomButton = document.getElementById('leaveRoomButton');
+const multiplayerStatus = document.getElementById('multiplayerStatus');
+const multiplayerDetails = document.querySelector('.multiplayer');
+const settingsDetails = document.querySelector('.settings');
 
 const GRAVITY = 22;
 const JUMP_SPEED = 10.4;
@@ -27,6 +36,7 @@ const MANTLE_DURATION = 0.52;
 const keys = new Set();
 const touchKeys = new Set();
 const platforms = [];
+const remotePlayers = new Map();
 const random = (seed) => {
   let value = seed >>> 0;
   return () => {
@@ -661,6 +671,19 @@ let coyoteTimer = 0;
 let sprintStamina = 100;
 let sprintExhausted = false;
 let mantle = null;
+let multiplayerClient = null;
+let multiplayerChannel = null;
+let multiplayerRoomCode = '';
+let multiplayerTimer = 0;
+let multiplayerGeneration = 0;
+let multiplayerLastPresence = 0;
+let multiplayerLastError = '';
+let lastBroadcastState = null;
+let multiplayerReconnectTimer = 0;
+let multiplayerReconnectAttempts = 0;
+const multiplayerPlayerId = window.crypto && typeof window.crypto.randomUUID === 'function'
+  ? window.crypto.randomUUID()
+  : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 
 const player = {
   x: 0, z: 0, y: 0, vx: 0, vz: 0, vy: 0,
@@ -698,6 +721,264 @@ function updateMouseSensitivitySetting() {
   mouseSensitivity = Number(mouseSensitivitySetting.value);
   mouseSensitivityValue.textContent = `${mouseSensitivity.toFixed(1)}x`;
   saveMouseSensitivity();
+}
+
+function getPlayerName() {
+  const name = playerNameInput.value.replace(/[^a-zA-Z0-9 _-]/g, '').trim().slice(0, 18);
+  return name || 'Climber';
+}
+
+function makeRoomCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+}
+
+function getRoomSeed(code) {
+  let seed = 2166136261;
+  for (const character of code) {
+    seed ^= character.charCodeAt(0);
+    seed = Math.imul(seed, 16777619);
+  }
+  return seed >>> 0;
+}
+
+function setRoomControlsBusy(busy) {
+  createRoomButton.disabled = busy;
+  joinRoomButton.disabled = busy;
+  leaveRoomButton.hidden = !multiplayerChannel;
+  copyRoomButton.hidden = !multiplayerRoomCode;
+}
+
+function applyRemotePlayerState(payload) {
+  if (!payload || typeof payload.playerId !== 'string' || payload.playerId.length > 80
+    || payload.playerId === multiplayerPlayerId) return;
+  const { x, y, z, facing } = payload;
+  if (![x, y, z, facing].every(Number.isFinite)
+    || Math.abs(x) > 10000 || Math.abs(z) > 10000 || y < -50 || y > 10000) return;
+  const name = String(payload.name || 'Climber').replace(/[^a-zA-Z0-9 _-]/g, '').trim().slice(0, 18) || 'Climber';
+  const isNewPlayer = !remotePlayers.has(payload.playerId);
+  let remote = remotePlayers.get(payload.playerId);
+  if (!remote) remote = createRemotePlayer(payload.playerId, name);
+  if (!remote) return;
+  if (remote.name !== name) {
+    const oldLabel = remote.root.children.find((child) => child.isSprite);
+    if (oldLabel) {
+      oldLabel.material.map.dispose();
+      oldLabel.material.dispose();
+      remote.root.remove(oldLabel);
+    }
+    addRemotePlayerLabel(remote.root, name);
+    remote.name = name;
+  }
+  remote.target.set(x, y, z);
+  remote.targetFacing = facing;
+  remote.platformIndex = Number.isInteger(payload.platformIndex)
+    ? Math.max(0, Math.min(payload.platformIndex, player.currentPlatformIndex + 10000))
+    : 0;
+  remote.lastSeen = performance.now();
+  if (isNewPlayer) updateRoomStatus();
+}
+
+function refreshRemotePlayersFromPresence(channel) {
+  const presence = channel.presenceState();
+  const presentPlayers = new Set();
+  for (const [id, states] of Object.entries(presence)) {
+    if (id === multiplayerPlayerId || !Array.isArray(states) || states.length === 0) continue;
+    presentPlayers.add(id);
+    const state = states[states.length - 1];
+    applyRemotePlayerState({ ...state, playerId: id });
+  }
+  for (const id of remotePlayers.keys()) {
+    if (!presentPlayers.has(id)) removeRemotePlayer(id);
+  }
+  updateRoomStatus();
+}
+
+function updateRoomStatus() {
+  if (!multiplayerChannel || !multiplayerRoomCode) return;
+  const count = remotePlayers.size;
+  multiplayerStatus.textContent = `Room ${multiplayerRoomCode} · ${count} friend${count === 1 ? '' : 's'} online. Share this code to invite friends.`;
+}
+
+function scheduleRoomReconnect(roomCode, generation) {
+  if (multiplayerReconnectTimer || multiplayerRoomCode !== roomCode) return;
+  multiplayerReconnectAttempts = Math.min(multiplayerReconnectAttempts + 1, 5);
+  const delay = Math.min(15000, 1000 * (2 ** (multiplayerReconnectAttempts - 1)));
+  multiplayerStatus.textContent = `Connection lost. Reconnecting in ${Math.ceil(delay / 1000)}s…`;
+  multiplayerReconnectTimer = window.setTimeout(() => {
+    multiplayerReconnectTimer = 0;
+    if (multiplayerRoomCode !== roomCode || multiplayerGeneration !== generation) return;
+    connectToRoom(roomCode, false).catch((error) => {
+      console.error('ONLY UP could not reconnect to the multiplayer room:', error);
+      multiplayerStatus.textContent = `Could not reconnect: ${error.message}`;
+      setRoomControlsBusy(false);
+    });
+  }, delay);
+}
+
+function getLocalPlayerState() {
+  return {
+    playerId: multiplayerPlayerId,
+    name: getPlayerName(),
+    x: player.x,
+    y: player.y,
+    z: player.z,
+    facing: player.facing,
+    platformIndex: player.currentPlatformIndex,
+  };
+}
+
+async function sendMultiplayerState(channel) {
+  if (channel.state !== 'joined') return;
+  const state = getLocalPlayerState();
+  if (lastBroadcastState
+    && Math.hypot(state.x - lastBroadcastState.x, state.y - lastBroadcastState.y, state.z - lastBroadcastState.z) < 0.03
+    && Math.abs(Math.atan2(Math.sin(state.facing - lastBroadcastState.facing), Math.cos(state.facing - lastBroadcastState.facing))) < 0.02
+    && state.platformIndex === lastBroadcastState.platformIndex
+    && state.name === lastBroadcastState.name) return;
+  try {
+    const result = await channel.send({
+      type: 'broadcast',
+      event: 'position',
+      payload: state,
+    });
+    if (result !== 'ok') throw new Error(`Realtime broadcast returned "${result}"`);
+    lastBroadcastState = state;
+    multiplayerLastError = '';
+  } catch (error) {
+    if (multiplayerLastError !== error.message) {
+      multiplayerLastError = error.message;
+      console.error('ONLY UP could not send multiplayer position:', error);
+      multiplayerStatus.textContent = `Connection problem: ${error.message}`;
+    }
+  }
+}
+
+async function connectToRoom(rawCode, restartIfRunning = true) {
+  const roomCode = rawCode.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  if (roomCode.length < 4) {
+    multiplayerStatus.textContent = 'Enter a room code with at least 4 letters or numbers.';
+    return;
+  }
+  const config = window.SLOPE_RUSH_SUPABASE;
+  if (!window.supabase || typeof window.supabase.createClient !== 'function'
+    || !config || !config.url || !config.anonKey) {
+    multiplayerStatus.textContent = 'Multiplayer could not load. Check your internet connection and reload the game.';
+    console.error('ONLY UP multiplayer needs the Supabase client and public project configuration.');
+    return;
+  }
+
+  const wasRunning = restartIfRunning && running;
+  setRoomControlsBusy(true);
+  multiplayerStatus.textContent = `Connecting to room ${roomCode}…`;
+  if (multiplayerReconnectTimer) {
+    window.clearTimeout(multiplayerReconnectTimer);
+    multiplayerReconnectTimer = 0;
+  }
+  if (multiplayerChannel) await leaveMultiplayerRoom(false);
+  setRoomControlsBusy(true);
+  multiplayerStatus.textContent = `Connecting to room ${roomCode}…`;
+  if (!multiplayerClient) {
+    multiplayerClient = window.supabase.createClient(config.url, config.anonKey, {
+      realtime: { params: { eventsPerSecond: 15 } },
+    });
+  }
+  const generation = ++multiplayerGeneration;
+  multiplayerRoomCode = roomCode;
+  roomCodeInput.value = roomCode;
+  if (wasRunning) {
+    multiplayerStatus.textContent = `Joining room ${roomCode} and restarting on its shared course…`;
+    startGame();
+    requestMouseLock();
+  }
+  const channel = multiplayerClient.channel(`only-up:${roomCode}`, {
+    config: { broadcast: { self: false }, presence: { key: multiplayerPlayerId } },
+  });
+  multiplayerChannel = channel;
+
+  channel
+    .on('presence', { event: 'sync' }, () => {
+      if (multiplayerGeneration === generation && multiplayerChannel === channel) {
+        refreshRemotePlayersFromPresence(channel);
+      }
+    })
+    .on('broadcast', { event: 'position' }, ({ payload }) => {
+      if (multiplayerGeneration === generation && multiplayerChannel === channel) applyRemotePlayerState(payload);
+    })
+    .subscribe(async (status) => {
+      if (multiplayerGeneration !== generation || multiplayerChannel !== channel) return;
+      if (status === 'SUBSCRIBED') {
+        try {
+          if (multiplayerReconnectTimer) {
+            window.clearTimeout(multiplayerReconnectTimer);
+            multiplayerReconnectTimer = 0;
+          }
+          const trackResult = await channel.track(getLocalPlayerState());
+          if (trackResult !== 'ok') throw new Error(`Realtime presence returned "${trackResult}"`);
+          multiplayerReconnectAttempts = 0;
+          lastBroadcastState = null;
+          multiplayerLastPresence = Date.now();
+          refreshRemotePlayersFromPresence(channel);
+          updateRoomStatus();
+          if (multiplayerTimer) window.clearInterval(multiplayerTimer);
+          setRoomControlsBusy(false);
+          multiplayerTimer = window.setInterval(() => {
+            if (multiplayerChannel !== channel) return;
+            void sendMultiplayerState(channel);
+            if (channel.state !== 'joined') return;
+            if (Date.now() - multiplayerLastPresence >= 2500) {
+              multiplayerLastPresence = Date.now();
+              channel.track(getLocalPlayerState()).catch((error) => {
+                console.error('ONLY UP could not refresh multiplayer presence:', error);
+                multiplayerStatus.textContent = `Connection problem: ${error.message}`;
+              });
+            }
+          }, 200);
+        } catch (error) {
+          console.error('ONLY UP could not join the multiplayer room:', error);
+          multiplayerStatus.textContent = `Could not join room: ${error.message}`;
+          setRoomControlsBusy(false);
+        }
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+        if (multiplayerTimer) {
+          window.clearInterval(multiplayerTimer);
+          multiplayerTimer = 0;
+        }
+        setRoomControlsBusy(false);
+        console.warn(`ONLY UP multiplayer channel status: ${status}`);
+        scheduleRoomReconnect(roomCode, generation);
+      }
+    });
+}
+
+async function leaveMultiplayerRoom(showMessage = true) {
+  multiplayerGeneration += 1;
+  if (multiplayerReconnectTimer) {
+    window.clearTimeout(multiplayerReconnectTimer);
+    multiplayerReconnectTimer = 0;
+  }
+  multiplayerReconnectAttempts = 0;
+  if (multiplayerTimer) {
+    window.clearInterval(multiplayerTimer);
+    multiplayerTimer = 0;
+  }
+  const channel = multiplayerChannel;
+  multiplayerChannel = null;
+  multiplayerRoomCode = '';
+  lastBroadcastState = null;
+  remotePlayers.forEach((_, id) => removeRemotePlayer(id));
+  setRoomControlsBusy(false);
+  if (channel && multiplayerClient) {
+    try {
+      const status = await multiplayerClient.removeChannel(channel);
+      if (status !== 'ok') throw new Error(`Realtime channel removal returned "${status}"`);
+    } catch (error) {
+      console.error('ONLY UP could not leave the multiplayer room cleanly:', error);
+      multiplayerStatus.textContent = `Could not leave room cleanly: ${error.message}`;
+      return;
+    }
+  }
+  if (showMessage) multiplayerStatus.textContent = 'You left the room. Your climb can continue solo.';
 }
 
 function saveBest() {
@@ -787,8 +1068,95 @@ function buildAvatar() {
 const avatar = buildAvatar();
 bestElement.textContent = `${best} m`;
 
+function addRemotePlayerLabel(root, name) {
+  const labelCanvas = document.createElement('canvas');
+  labelCanvas.width = 256;
+  labelCanvas.height = 64;
+  const context = labelCanvas.getContext('2d');
+  context.fillStyle = 'rgba(12, 19, 28, 0.78)';
+  context.beginPath();
+  context.roundRect(4, 4, 248, 56, 14);
+  context.fill();
+  context.fillStyle = '#edf2f7';
+  context.font = 'bold 28px Trebuchet MS, sans-serif';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(name.slice(0, 18), 128, 32, 232);
+  const texture = new THREE.CanvasTexture(labelCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+  sprite.scale.set(2.2, 0.55, 1);
+  sprite.position.y = 2.25;
+  root.add(sprite);
+}
+
+function createRemotePlayer(id, name) {
+  if (remotePlayers.has(id) || remotePlayers.size >= 16) return remotePlayers.get(id) || null;
+  const remoteAvatar = buildAvatar();
+  const hue = Array.from(id).reduce((value, char) => (value * 31 + char.charCodeAt(0)) % 360, 0);
+  const ownedMaterials = new Set();
+  const ownedGeometries = new Set();
+  remoteAvatar.root.traverse((object) => {
+    if (!object.isMesh) return;
+    ownedGeometries.add(object.geometry);
+    if (object.material === materials.hoodie || object.material === materials.hoodieLight) {
+      const baseMaterial = object.material;
+      object.material = object.material.clone();
+      object.material.color.setHSL(hue / 360, 0.36, baseMaterial === materials.hoodie ? 0.42 : 0.56);
+      ownedMaterials.add(object.material);
+    } else if (!Object.values(materials).includes(object.material)) {
+      ownedMaterials.add(object.material);
+    }
+  });
+  addRemotePlayerLabel(remoteAvatar.root, name);
+  const remote = {
+    ...remoteAvatar,
+    name,
+    target: new THREE.Vector3(),
+    targetFacing: 0,
+    platformIndex: 0,
+    lastSeen: performance.now(),
+    ownedMaterials,
+    ownedGeometries,
+  };
+  remotePlayers.set(id, remote);
+  return remote;
+}
+
+function removeRemotePlayer(id) {
+  const remote = remotePlayers.get(id);
+  if (!remote) return;
+  world.remove(remote.root);
+  remote.ownedGeometries.forEach((geometry) => geometry.dispose());
+  remote.ownedMaterials.forEach((material) => material.dispose());
+  remote.root.children.filter((child) => child.isSprite).forEach((sprite) => {
+    sprite.material.map.dispose();
+    sprite.material.dispose();
+  });
+  remotePlayers.delete(id);
+}
+
+function updateRemotePlayers(delta) {
+  const now = performance.now();
+  for (const [id, remote] of remotePlayers) {
+    if (now - remote.lastSeen > 15000) {
+      removeRemotePlayer(id);
+      continue;
+    }
+    remote.root.position.lerp(remote.target, 1 - Math.exp(-12 * delta));
+    const facingDelta = Math.atan2(
+      Math.sin(remote.targetFacing - remote.root.rotation.y),
+      Math.cos(remote.targetFacing - remote.root.rotation.y),
+    );
+    remote.root.rotation.y += facingDelta * (1 - Math.exp(-12 * delta));
+  }
+}
+
 function buildAhead() {
-  while (platformIndex < player.currentPlatformIndex + 12) {
+  const furthestPlayer = Array.from(remotePlayers.values())
+    .reduce((furthest, remote) => Math.max(furthest, remote.platformIndex), player.currentPlatformIndex);
+  const buildTarget = Math.min(furthestPlayer, player.currentPlatformIndex + 48) + 12;
+  while (platformIndex < buildTarget) {
     const index = ++platformIndex;
     const previous = platforms[platforms.length - 1];
     const position = routePoint(index);
@@ -916,7 +1284,10 @@ function resetRoute() {
 }
 
 function startGame() {
-  rng = random((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+  const seed = multiplayerRoomCode
+    ? getRoomSeed(multiplayerRoomCode)
+    : (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+  rng = random(seed);
   cameraYaw = routeYaw(0);
   cameraViewYaw = cameraYaw;
   mouseLookTracking = false;
@@ -963,6 +1334,7 @@ function togglePause() {
   mouseLookTracking = false;
   if (paused) showOverlay('Take a breath. Your climb is paused.', 'Resume climb');
   else hideOverlay();
+  if (paused && document.pointerLockElement === canvas) document.exitPointerLock();
 }
 
 function inputState() {
@@ -1177,24 +1549,43 @@ function frame(timestamp) {
   lastFrame = timestamp;
   update(delta);
   updateAvatar();
+  updateRemotePlayers(delta);
   updateCamera(delta);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
+}
+
+function requestMouseLock() {
+  if (!running || paused || document.pointerLockElement === canvas || !canvas.requestPointerLock) return;
+  try {
+    const request = canvas.requestPointerLock();
+    if (request && typeof request.catch === 'function') {
+      request.catch((error) => {
+        console.warn('ONLY UP could not lock the mouse pointer:', error);
+        runStatus.textContent = 'CLICK THE GAME TO CAPTURE MOUSE';
+      });
+    }
+  } catch (error) {
+    console.warn('ONLY UP could not lock the mouse pointer:', error);
+    runStatus.textContent = 'CLICK THE GAME TO CAPTURE MOUSE';
+  }
 }
 
 startButton.addEventListener('click', () => {
   if (paused) {
     paused = false;
     hideOverlay();
+    requestMouseLock();
     return;
   }
   startGame();
+  requestMouseLock();
 });
 
 window.addEventListener('keydown', (event) => {
   if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(event.code)) event.preventDefault();
   if (event.code === 'Escape') {
-    togglePause();
+    if (!paused) togglePause();
     return;
   }
   if (event.repeat && event.code === 'Space') return;
@@ -1219,14 +1610,15 @@ canvas.addEventListener('pointerenter', (event) => {
 
 canvas.addEventListener('pointermove', (event) => {
   if (event.pointerType !== 'mouse' || !running || paused) return;
-  if (!mouseLookTracking) {
+  const isLocked = document.pointerLockElement === canvas;
+  if (!isLocked && !mouseLookTracking) {
     lastPointerX = event.clientX;
     lastPointerY = event.clientY;
     mouseLookTracking = true;
     return;
   }
-  const deltaX = event.clientX - lastPointerX;
-  const deltaY = event.clientY - lastPointerY;
+  const deltaX = isLocked ? event.movementX : event.clientX - lastPointerX;
+  const deltaY = isLocked ? event.movementY : event.clientY - lastPointerY;
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
   const fullTurn = Math.PI * 2;
@@ -1236,12 +1628,69 @@ canvas.addEventListener('pointermove', (event) => {
 });
 
 canvas.addEventListener('pointerleave', (event) => {
-  if (event.pointerType === 'mouse') mouseLookTracking = false;
+  if (event.pointerType === 'mouse' && document.pointerLockElement !== canvas) mouseLookTracking = false;
+});
+
+document.addEventListener('pointerlockchange', () => {
+  const locked = document.pointerLockElement === canvas;
+  playfield.classList.toggle('mouse-locked', locked);
+  mouseLookTracking = locked;
+  if (!locked && running && !paused) togglePause();
+});
+
+document.addEventListener('pointerlockerror', () => {
+  runStatus.textContent = 'MOUSE LOCK FAILED — CLICK THE GAME TO TRY AGAIN';
+  console.warn('ONLY UP pointer lock was denied by the browser.');
+});
+
+canvas.addEventListener('click', () => {
+  if (running && !paused && document.pointerLockElement !== canvas) requestMouseLock();
 });
 
 mouseSensitivitySetting.value = String(mouseSensitivity);
 mouseSensitivityValue.textContent = `${mouseSensitivity.toFixed(1)}x`;
 mouseSensitivitySetting.addEventListener('input', updateMouseSensitivitySetting);
+
+createRoomButton.addEventListener('click', () => {
+  const code = makeRoomCode();
+  roomCodeInput.value = code;
+  void connectToRoom(code).catch((error) => {
+    console.error('ONLY UP could not create a multiplayer room:', error);
+    multiplayerStatus.textContent = `Could not create room: ${error.message}`;
+    setRoomControlsBusy(false);
+  });
+});
+
+joinRoomButton.addEventListener('click', () => {
+  void connectToRoom(roomCodeInput.value).catch((error) => {
+    console.error('ONLY UP could not join a multiplayer room:', error);
+    multiplayerStatus.textContent = `Could not join room: ${error.message}`;
+    setRoomControlsBusy(false);
+  });
+});
+
+leaveRoomButton.addEventListener('click', () => {
+  void leaveMultiplayerRoom();
+});
+
+copyRoomButton.addEventListener('click', () => {
+  if (!multiplayerRoomCode) return;
+  navigator.clipboard.writeText(multiplayerRoomCode).then(() => {
+    multiplayerStatus.textContent = `Room code ${multiplayerRoomCode} copied.`;
+  }).catch((error) => {
+    console.warn('ONLY UP could not copy the room code:', error);
+    multiplayerStatus.textContent = 'Could not copy. Select the room code above and copy it manually.';
+  });
+});
+
+multiplayerDetails.addEventListener('toggle', () => {
+  if (multiplayerDetails.open) settingsDetails.open = false;
+  if (multiplayerDetails.open && multiplayerChannel) roomCodeInput.select();
+});
+
+settingsDetails.addEventListener('toggle', () => {
+  if (settingsDetails.open) multiplayerDetails.open = false;
+});
 
 for (const button of document.querySelectorAll('[data-control]')) {
   const control = button.dataset.control;

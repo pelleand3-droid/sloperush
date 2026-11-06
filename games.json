@@ -37,14 +37,15 @@
   {
     "id": "only-up",
     "name": "ONLY UP",
-    "description": "Climb a circular mountain course with jumps, mantling, and sprinting.",
+    "description": "Climb an endless 3D skyward obstacle course solo or with friends in shared rooms.",
     "baseUrl": "https://pelleand3-droid.github.io/sloperush/games/only-up/",
     "files": [
       "index.html",
+      "three.min.js",
+      "THREE-LICENSE.txt",
       "game.js",
       "style.css",
-      "three.min.js",
-      "THREE-LICENSE.txt"
+      "supabase-config.js"
     ]
   }
 ]

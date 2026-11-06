@@ -39,9 +39,14 @@ player lets off Shift. In ONLY UP, A moves right and D moves left; arrow-key
 directions are unchanged. Mouse movement turns the character and steers forward
 movement; horizontal mouse turning is reversed from the previous version, and
 A/D remain movement-only. Mouse sensitivity is adjustable in Settings and
-saved locally. Jump inputs are buffered briefly and still work just after
-stepping off a platform. Press or hold Space near the next tall ledge,
-including while airborne, to mantle. Landing on a new platform no longer
+saved locally. Starting a climb captures and hides the mouse; Escape pauses and
+releases it. Create or join a Friends room and share its six-character code to
+see each other's climbers on the same seeded course. Joining a room mid-climb
+restarts at the start so the room shares one course. Multiplayer uses the
+project's Supabase Realtime service and requires an internet connection; the
+solo game remains playable offline. Jump inputs are buffered briefly and still
+work just after stepping off a platform. Press or hold Space near the next tall
+ledge, including while airborne, to mantle. Landing on a new platform no longer
 rotates the camera.
 
 The launcher only downloads games hosted under this project's HTTPS GitHub

@@ -102,10 +102,63 @@ button { font: inherit; color: inherit; }
 .settings-panel label { display: flex; justify-content: space-between; gap: 12px; color: var(--ink); font-size: 12px; }
 .settings-panel output { color: var(--accent); font-family: var(--mono); }
 .settings-panel input { width: 100%; margin: 14px 0 2px; accent-color: var(--accent); cursor: pointer; }
+.multiplayer { position: relative; }
+.multiplayer-toggle {
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  font: 10px var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+}
+.multiplayer-toggle::-webkit-details-marker { display: none; }
+.multiplayer-toggle::after { content: ' +'; color: var(--accent); }
+.multiplayer[open] .multiplayer-toggle::after { content: ' −'; }
+.multiplayer-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  gap: 8px;
+  width: 258px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #111b29;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+}
+.multiplayer-panel label { color: var(--ink); font-size: 11px; }
+.multiplayer-panel input {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #0c1420;
+  color: var(--ink);
+  font: 12px var(--mono);
+}
+.multiplayer-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.multiplayer-actions button {
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #1b2a3b;
+  color: var(--ink);
+  font: 9px var(--mono);
+  cursor: pointer;
+}
+.multiplayer-actions button:hover, .multiplayer-actions button:focus-visible { border-color: var(--accent); outline: none; }
+#multiplayerStatus { margin: 2px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
 
 .playfield { position: relative; overflow: hidden; background: #7eafca; }
 #gameCanvas { display: block; width: 100%; aspect-ratio: 3 / 2; touch-action: none; }
 .playfield #gameCanvas { cursor: crosshair; }
+.playfield.mouse-locked #gameCanvas { cursor: none; }
 .look-hint {
   position: absolute;
   right: 18px;
@@ -179,10 +232,10 @@ kbd { margin: 0 2px; padding: 2px 5px; border: 1px solid rgba(255, 255, 255, 0.3
 
 @media (max-width: 640px) {
   body { padding: 10px; }
-  .topbar { min-height: 62px; gap: 10px; padding: 0 14px; }
+  .topbar { min-height: 62px; gap: 8px; padding: 0 10px; }
   .brand { gap: 5px; font-size: 10px; letter-spacing: 0.08em; }
   .brand span { font-size: 18px; }
-  .hud { gap: 14px; }
+  .hud { gap: 11px; }
   .stat { min-width: 48px; }
   .label { font-size: 7px; }
   .stat strong { font-size: 13px; }
@@ -192,6 +245,10 @@ kbd { margin: 0 2px; padding: 2px 5px; border: 1px solid rgba(255, 255, 255, 0.3
   .settings-toggle::before { content: '⚙'; color: var(--ink); font: 14px var(--sans); }
   .settings-toggle::after { font: 12px var(--sans); }
   .settings-panel { right: 0; width: 210px; }
+  .multiplayer-toggle { padding: 7px; font-size: 0; }
+  .multiplayer-toggle::before { content: 'FRIENDS'; color: var(--ink); font: 8px var(--mono); }
+  .multiplayer-toggle::after { font: 12px var(--sans); }
+  .multiplayer-panel { right: 0; width: min(258px, calc(100vw - 32px)); }
   .footer { padding: 10px 13px; font-size: 7px; }
   .look-hint { right: 50%; bottom: 84px; transform: translateX(50%); white-space: nowrap; }
   .touch-controls { position: absolute; right: 12px; bottom: 12px; left: 12px; z-index: 1; display: flex; align-items: end; justify-content: space-between; pointer-events: none; }
@@ -209,5 +266,15 @@ kbd { margin: 0 2px; padding: 2px 5px; border: 1px solid rgba(255, 255, 255, 0.3
 @media (max-width: 390px) {
   .brand { font-size: 9px; }
   .hud { gap: 9px; }
+  .topbar { gap: 6px; padding: 0 8px; }
   .footer span:last-child { text-align: right; }
+}
+
+@media (max-width: 360px) {
+  .topbar { position: relative; min-height: 88px; flex-wrap: wrap; justify-content: space-between; row-gap: 6px; padding: 8px 10px; }
+  .brand { margin-right: auto; }
+  .hud { order: 3; width: 100%; justify-content: center; margin-left: 0; }
+  .multiplayer { position: static; order: 2; }
+  .multiplayer-panel { top: calc(100% + 8px); right: 8px; width: min(258px, calc(100vw - 32px)); }
+  .settings { order: 2; }
 }
