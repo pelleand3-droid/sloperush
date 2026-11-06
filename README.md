@@ -28,14 +28,21 @@ To add a game:
    site. The current workflow already deploys the complete `games/` folder.
 
 The launcher includes **STARFIGHTER**, a self-contained space shooter in
-`games/starfighter/`, and **ONLY UP**, a 3D climbing game in `games/only-up/`,
-alongside the original Slope Rush and BREAKWAVE. ONLY UP has a circular
-obstacle route, jumping, midair mantling, sprint stamina, and a smooth
-third-person camera that follows behind the player. A/D movement is swapped;
-arrows are unchanged. Move the mouse over the game to look around. Its Three.js
-dependency is bundled locally for offline play, and its license is included
-in the game files. Prop tops, support slabs, and the mantle runway all have
-matching collision surfaces.
+`games/starfighter/`, and **ONLY UP**, an endless 3D climbing obby in
+`games/only-up/`, alongside the original Slope Rush and BREAKWAVE. ONLY UP
+uses a locally bundled Three.js renderer for a 3D third-person climbing course
+with animated movement, mountain scenery, mouse-controlled turning, and sprinting.
+The Three.js license is included in its game folder. Its course winds upward in
+a circle around a scaffold tower, across narrow prop-top landings and tall
+ledges that require a mantle. Sprint stamina is limited and recovers when the
+player lets off Shift. In ONLY UP, A moves right and D moves left; arrow-key
+directions are unchanged. Mouse movement turns the character and steers forward
+movement; horizontal mouse turning is reversed from the previous version, and
+A/D remain movement-only. Mouse sensitivity is adjustable in Settings and
+saved locally. Jump inputs are buffered briefly and still work just after
+stepping off a platform. Press or hold Space near the next tall ledge,
+including while airborne, to mantle. Landing on a new platform no longer
+rotates the camera.
 
 The launcher only downloads games hosted under this project's HTTPS GitHub
 Pages address. Keep game files self-contained or list every required asset in

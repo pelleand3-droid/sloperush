@@ -15,6 +15,8 @@ const JUMP_SPEED = 10.4;
 const PLAYER_RADIUS = 0.28;
 const PLAYER_HEIGHT = 1.65;
 const MOUSE_SENSITIVITY = 0.0025;
+const mouseSensitivitySetting = document.getElementById('mouseSensitivity');
+const mouseSensitivityValue = document.getElementById('mouseSensitivityValue');
 const ROUTE_RADIUS = 16;
 const ROUTE_STEPS_PER_LAP = 32;
 const JUMP_BUFFER_DURATION = 0.12;
@@ -651,6 +653,7 @@ let respawnTimer = 0;
 let lastPointerX = 0;
 let lastPointerY = 0;
 let mouseLookTracking = false;
+let mouseSensitivity = loadMouseSensitivity();
 let spaceWasDown = false;
 let landingTimer = 0;
 let jumpBufferTimer = 0;
@@ -671,6 +674,30 @@ function loadBest() {
     console.warn('Could not read the ONLY UP best climb:', error);
     return 0;
   }
+}
+
+function loadMouseSensitivity() {
+  try {
+    const saved = Number(localStorage.getItem('only-up-mouse-sensitivity'));
+    return Number.isFinite(saved) && saved >= 0.5 && saved <= 3 ? saved : 1;
+  } catch (error) {
+    console.warn('Could not read ONLY UP mouse sensitivity:', error);
+    return 1;
+  }
+}
+
+function saveMouseSensitivity() {
+  try {
+    localStorage.setItem('only-up-mouse-sensitivity', String(mouseSensitivity));
+  } catch (error) {
+    console.warn('Could not save ONLY UP mouse sensitivity:', error);
+  }
+}
+
+function updateMouseSensitivitySetting() {
+  mouseSensitivity = Number(mouseSensitivitySetting.value);
+  mouseSensitivityValue.textContent = `${mouseSensitivity.toFixed(1)}x`;
+  saveMouseSensitivity();
 }
 
 function saveBest() {
@@ -1070,7 +1097,6 @@ function update(delta) {
   if (mantle) {
     advanceMantle(delta);
   } else {
-    if (Math.abs(targetX) + Math.abs(targetZ) > 0.2) player.facing = Math.atan2(targetX, targetZ);
     player.vx += (targetX - player.vx) * Math.min(1, response * delta);
     player.vz += (targetZ - player.vz) * Math.min(1, response * delta);
     const previousX = player.x;
@@ -1204,14 +1230,18 @@ canvas.addEventListener('pointermove', (event) => {
   lastPointerX = event.clientX;
   lastPointerY = event.clientY;
   const fullTurn = Math.PI * 2;
-  player.facing = ((player.facing + deltaX * MOUSE_SENSITIVITY + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
+  player.facing = ((player.facing - deltaX * MOUSE_SENSITIVITY * mouseSensitivity + Math.PI) % fullTurn + fullTurn) % fullTurn - Math.PI;
   cameraTargetYaw = player.facing;
-  cameraTargetPitch = Math.max(-0.88, Math.min(0.62, cameraTargetPitch - deltaY * MOUSE_SENSITIVITY));
+  cameraTargetPitch = Math.max(-0.88, Math.min(0.62, cameraTargetPitch - deltaY * MOUSE_SENSITIVITY * mouseSensitivity));
 });
 
 canvas.addEventListener('pointerleave', (event) => {
   if (event.pointerType === 'mouse') mouseLookTracking = false;
 });
+
+mouseSensitivitySetting.value = String(mouseSensitivity);
+mouseSensitivityValue.textContent = `${mouseSensitivity.toFixed(1)}x`;
+mouseSensitivitySetting.addEventListener('input', updateMouseSensitivitySetting);
 
 for (const button of document.querySelectorAll('[data-control]')) {
   const control = button.dataset.control;
