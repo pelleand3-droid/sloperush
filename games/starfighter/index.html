@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#090d1c" />
+    <title>STARFIGHTER — defend the galaxy</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="STARFIGHTER home"><span aria-hidden="true">✦</span> STARFIGHTER</a>
+        <div class="hud" aria-live="polite">
+          <div class="stat"><span class="label">Score</span><strong id="score">0</strong></div>
+          <div class="stat"><span class="label">Best</span><strong id="best">0</strong></div>
+          <div class="stat"><span class="label">Ships</span><strong id="lives">3</strong></div>
+        </div>
+      </header>
+
+      <section class="playfield" aria-label="STARFIGHTER space shooter">
+        <canvas id="gameCanvas" width="900" height="600" aria-label="Pilot a starfighter and shoot enemy ships"></canvas>
+        <div id="overlay" class="overlay visible" aria-live="polite">
+          <div class="overlay-card">
+            <p class="eyebrow">A signal from the edge of space</p>
+            <h1>STAR<span>FIGHTER</span></h1>
+            <p id="overlayCopy">Pilot your ship, blast through enemy waves, and protect the galaxy.</p>
+            <button id="startButton" class="start-button" type="button">Launch mission</button>
+            <p class="overlay-hint">Move with <kbd>WASD</kbd> or <kbd>← ↑ ↓ →</kbd> · Fire with <kbd>SPACE</kbd> · Pause with <kbd>ESC</kbd></p>
+          </div>
+        </div>
+        <div class="touch-controls" aria-label="Touch controls">
+          <div class="direction-pad">
+            <button type="button" data-control="up" aria-label="Move up">↑</button>
+            <div>
+              <button type="button" data-control="left" aria-label="Move left">←</button>
+              <button type="button" data-control="down" aria-label="Move down">↓</button>
+              <button type="button" data-control="right" aria-label="Move right">→</button>
+            </div>
+          </div>
+          <button class="fire-button" type="button" data-control="fire" aria-label="Fire">FIRE</button>
+        </div>
+      </section>
+      <footer class="footer"><span>KEEP THE STARS SAFE.</span><span>MISSION CONTROL // EARTH</span></footer>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>

@@ -27,6 +27,9 @@ To add a game:
 3. Add the folder and `games.json` to the Pages deployment, then publish the
    site. The current workflow already deploys the complete `games/` folder.
 
+The launcher currently includes **STARFIGHTER**, a self-contained space shooter
+in `games/starfighter/`, alongside the original Slope Rush and BREAKWAVE.
+
 The launcher only downloads games hosted under this project's HTTPS GitHub
 Pages address. Keep game files self-contained or list every required asset in
 the catalog. The catalog is cached locally so previously listed games remain

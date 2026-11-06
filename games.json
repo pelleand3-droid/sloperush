@@ -22,5 +22,16 @@
       "style.css",
       "supabase-config.js"
     ]
+  },
+  {
+    "id": "starfighter",
+    "name": "STARFIGHTER",
+    "description": "Defend the galaxy. Pilot through waves of enemy ships, blast them apart, and chase your high score.",
+    "baseUrl": "https://pelleand3-droid.github.io/sloperush/games/starfighter/",
+    "files": [
+      "index.html",
+      "game.js",
+      "style.css"
+    ]
   }
 ]
